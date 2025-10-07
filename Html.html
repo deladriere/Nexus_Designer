@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>VAX KEYB. READER — LCD simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* tweak sizes/colors here */
+            --outer-border: 2mm;
+            /* blue border thickness */
+            --bezel: 0px;
+            /* black faceplate uses padding, not border */
+            --cell-w: 16px;
+            /* character cell width */
+            --cell-h: 24px;
+            /* character cell height */
+            --cell-gap-x: 4px;
+            /* horizontal spacing between cells */
+            --cell-gap-y: 8px;
+            /* vertical spacing between rows */
+            --lcd-bg: #ffe8f0;
+            /* light pink LCD background */
+            --char-color: #000000;
+            /* text color */
+            --outer-blue: #ff6b9d;
+            /* outer border color */
+            --faceplate-padding-y: 16px;
+            --faceplate-padding-x: 26px;
+            --case-padding-y: 22px;
+            --case-padding-x: 34px;
+            --case-width: 500px;
+            --lcd-pad-x: 20px;
+            --lcd-pad-y: 8px;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #f3f5f8;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            display: grid;
+            place-items: center;
+            min-height: 100dvh;
+        }
+
+        .module {
+            width: var(--case-width);
+            display: inline-block;
+            border-radius: 14px;
+            background: var(--outer-blue);
+            padding: var(--case-padding-y) var(--case-padding-x);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, .18), inset 0 2px 0 rgba(255, 255, 255, .45);
+        }
+
+        .bezel {
+            border: var(--bezel) solid #000;
+            border-radius: 10px;
+            background: #000;
+            /* black faceplate area */
+            padding: var(--faceplate-padding-y) var(--faceplate-padding-x);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lcd {
+            background: var(--lcd-bg);
+            border-radius: 6px;
+            padding: var(--lcd-pad-y) var(--lcd-pad-x);
+            width: calc(16 * var(--cell-w) + 15 * var(--cell-gap-x) + 2 * var(--lcd-pad-x));
+            height: calc(2 * var(--cell-h) + 1 * var(--cell-gap-y) + 2 * var(--lcd-pad-y));
+            box-shadow: inset 0 3px 10px rgba(0, 0, 0, .25);
+            display: inline-block;
+        }
+
+        /* 16 columns × 2 rows grid of character cells */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(16, var(--cell-w));
+            grid-template-rows: repeat(2, var(--cell-h));
+            gap: var(--cell-gap-y) var(--cell-gap-x);
+        }
+
+        .cell {
+            width: var(--cell-w);
+            height: var(--cell-h);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--char-color);
+            font-family: 'DotGothic16', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-weight: 400;
+            font-size: 20px;
+            line-height: 1;
+            letter-spacing: 0;
+            /* subtle LCD-like pixel edges */
+            text-shadow: 0 0 0 rgba(0, 0, 0, .8);
+            user-select: none;
+        }
+
+        /* Top input bar */
+        .input-bar {
+            position: absolute;
+            /* left and width are computed in JS to match the case */
+            max-width: calc(100vw - 48px);
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, max-content);
+            grid-template-rows: repeat(4, auto);
+            gap: 8px 12px;
+            justify-content: center;
+        }
+
+        .input-bar input[type="text"] {
+            padding: 6px 4px;
+            border-radius: 6px;
+            border: 1px solid #c7d0e3;
+            text-align: center;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        }
+
+        .input-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-cell label {
+            font-size: 12px;
+            color: #5a6b88;
+            margin-bottom: 4px;
+            user-select: none;
+        }
+
+        .voice-selector {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px 14px;
+            margin-bottom: 10px;
+        }
+
+        .voice-selector .group-label {
+            font-size: 12px;
+            color: #2d3b55;
+            margin-right: 6px;
+            user-select: none;
+        }
+
+        .voice-selector label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #2d3b55;
+            cursor: pointer;
+        }
+
+        .input-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .input-actions button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: #ff6b9d;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+        }
+
+        /* Controls row (design voice, reset) */
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .controls-row .text-group label {
+            display: block;
+            font-size: 12px;
+            color: #2d3b55;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: #64748b;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+        }
+
+        /* No pseudo-elements; ensures the first grid cell is used by the first character */
+    </style>
+</head>
+
+<body>
+    <div id="inputBar" class="input-bar">
+        <div class="voice-selector" id="voiceSelector"></div>
+        <div class="controls-row">
+            <div class="text-group">
+                <label for="designVoice">Design voice</label>
+                <input type="text" id="designVoice" placeholder="e.g., Classic" />
+            </div>
+            <button id="resetBtn" type="button" class="btn-secondary">Reset</button>
+        </div>
+        <div class="inputs-grid" id="inputsGrid"></div>
+        <div class="input-actions">
+            <button id="updateBtn" type="button">Update</button>
+        </div>
+    </div>
+    <div class="module">
+        <div class="bezel">
+            <div class="lcd">
+                <div class="grid" id="lcdGrid" aria-label="16x2 LCD display"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLS = 16, ROWS = 2;
+        const grid = document.getElementById('lcdGrid');
+
+        // Build static grid once
+        const cells = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const span = document.createElement('span');
+                span.className = 'cell';
+                span.textContent = '\u00A0';
+                grid.appendChild(span);
+                cells.push(span);
+            }
+        }
+
+        function renderLines(line1, line2) {
+            const padded1 = (line1 + " ".repeat(COLS)).slice(0, COLS);
+            const padded2 = (line2 + " ".repeat(COLS)).slice(0, COLS);
+            const content = padded1 + padded2;
+            for (let i = 0; i < cells.length; i++) {
+                const ch = content[i];
+                cells[i].textContent = ch === ' ' ? '\u00A0' : ch;
+            }
+        }
+
+        // Public API for future serial integration
+        window.lcdSetLines = function (line1, line2) {
+            renderLines(line1 ?? "", line2 ?? "");
+        };
+        window.lcdClear = function () {
+            renderLines("", "");
+        };
+
+        // Default text to match the photo
+        window.lcdSetLines("VAX KEYB. READER", "Version 0.1");
+
+        // Position the input bar halfway between top of viewport and the display
+        function positionInputBar() {
+            const bar = document.getElementById('inputBar');
+            const module = document.querySelector('.module');
+            const caseRect = module.getBoundingClientRect();
+            const scrollX = window.scrollX || window.pageXOffset;
+            const scrollY = window.scrollY || window.pageYOffset;
+            const width = caseRect.width;
+            const startLeft = Math.round(scrollX + (window.innerWidth - width) / 2); // center to screen
+            const moduleTop = caseRect.top + scrollY; // top of the blue case
+            // set left/width first so height measurement is accurate
+            bar.style.left = startLeft + 'px';
+            bar.style.width = width + 'px';
+            const gap = 20; // minimum vertical gap between inputs and display
+            const halfwayTop = Math.round(moduleTop / 2) - 16;
+            const barHeight = bar.offsetHeight || 0;
+            const maxTop = moduleTop - barHeight - gap; // don't let it touch the display
+            const finalTop = Math.min(halfwayTop, maxTop);
+            bar.style.top = Math.max(8, finalTop) + 'px';
+        }
+        positionInputBar();
+        window.addEventListener('resize', positionInputBar);
+        window.addEventListener('scroll', positionInputBar, { passive: true });
+
+        // Build 12 labeled inputs (MIDI notes 36..47) in a 3×4 grid
+        (function buildInputs() {
+            const gridEl = document.getElementById('inputsGrid');
+            const START_NOTE = 36;
+            const COUNT = 12;
+            for (let i = 0; i < COUNT; i++) {
+                const note = START_NOTE + i;
+                const cell = document.createElement('div');
+                cell.className = 'input-cell';
+
+                const label = document.createElement('label');
+                label.textContent = String(note);
+                label.setAttribute('for', `note_${note}`);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `note_${note}`;
+                input.maxLength = 256;
+
+                cell.appendChild(label);
+                cell.appendChild(input);
+                gridEl.appendChild(cell);
+            }
+        })();
+
+        // Build voice selector radios from provided list
+        (function buildVoiceSelector() {
+            const voices = ["Perfect Paul", "Vader", "Big Bob", "Precise Pete", "Ricochet Randy", "Biff", "Skip", "Robo Robert", "Goliath", "Alvin", "Gretchen"];
+            const container = document.getElementById('voiceSelector');
+            const groupLabel = document.createElement('span');
+            groupLabel.className = 'group-label';
+            groupLabel.textContent = 'Voice:';
+            container.appendChild(groupLabel);
+            voices.forEach((name, idx) => {
+                const id = `voice_${idx}`;
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'voice';
+                input.id = id;
+                input.value = name;
+                if (idx === 0) input.checked = true;
+                const text = document.createElement('span');
+                text.textContent = name;
+                label.appendChild(input);
+                label.appendChild(text);
+                container.appendChild(label);
+            });
+        })();
+
+        // Update display with combined text from inputs (fills both lines)
+        document.getElementById('updateBtn').addEventListener('click', () => {
+            const inputs = [...document.querySelectorAll('#inputBar input')];
+            const merged = inputs.map(i => i.value || '').join(' ').padEnd(COLS * ROWS, ' ');
+            const line1 = merged.slice(0, COLS);
+            const line2 = merged.slice(COLS, COLS * 2);
+            window.lcdSetLines(line1, line2);
+        });
+
+        // Reset: clear inputs and restore default text
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.querySelectorAll('#inputsGrid input').forEach(i => i.value = '');
+            document.getElementById('designVoice').value = '';
+            window.lcdSetLines('VAX KEYB. READER', 'Version 0.1');
+        });
+    </script>
+</body>
+
+</html>

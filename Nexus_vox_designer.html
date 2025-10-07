@@ -1,0 +1,2111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nexus vox designer</title>
+    <style>
+        :root {
+            --bg: #0b0d10;
+            --bg-accent: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            --card: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.12);
+            --text: #e7eaf0;
+            --muted: #aab3c2;
+            --primary: #ff6b9d;
+            --primary-contrast: #04222a;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --radius-lg: 16px;
+            --radius-sm: 12px;
+            --gap-lg: 24px;
+            --gap-md: 16px;
+            --gap-sm: 10px;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f5f7fb;
+                --bg-accent: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+                --card: #ffffff;
+                --border: rgba(10, 23, 40, 0.08);
+                --text: #0f1726;
+                --muted: #51607a;
+                --primary: #ff6b9d;
+                --primary-contrast: #ffffff;
+                --shadow: 0 10px 25px rgba(16, 24, 40, 0.1);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: radial-gradient(1200px 600px at 10% -10%, rgba(255, 107, 157, 0.12), transparent 60%),
+                radial-gradient(900px 500px at 90% -20%, rgba(128, 90, 213, 0.10), transparent 60%),
+                var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            line-height: 1.45;
+        }
+
+        main.page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 20px 48px;
+        }
+
+        .page-header {
+            display: none;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 8px 12px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .page-header .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand {
+            height: 28px;
+            width: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: #fff;
+        }
+
+        .stack {
+            display: grid;
+            grid-template-columns: 1fr minmax(240px, 300px);
+            gap: var(--gap-lg);
+            margin-bottom: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .stack {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            backdrop-filter: saturate(140%) blur(6px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px 0;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 14px 18px 18px;
+        }
+
+        .main-card .card-body {
+            padding-top: 6px;
+        }
+
+        /* Ensure main cards expand to full width of grid column */
+        .stack>.main-card {
+            width: 100%;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--gap-md);
+        }
+
+        .section-grid .span-12 {
+            grid-column: span 12;
+        }
+
+        .section-grid .span-6 {
+            grid-column: span 6;
+        }
+
+        .section-grid .span-4 {
+            grid-column: span 4;
+        }
+
+        @media (max-width: 700px) {
+
+            .section-grid .span-6,
+            .section-grid .span-4 {
+                grid-column: span 12;
+            }
+        }
+
+        .field {
+            display: grid;
+            gap: 6px;
+            margin-bottom: var(--gap-md);
+        }
+
+        /* Reduce space below MIDI pads before the Update button */
+        .pads-field {
+            margin-bottom: calc(var(--gap-md) / 4);
+        }
+
+        /* Reduce spacing below the voice name row */
+        .name-row .field {
+            margin-bottom: 0;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"],
+        select {
+            appearance: none;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            outline: none;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.08s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn.primary {
+            background: #ff6b9d;
+            color: var(--primary-contrast);
+            border-color: #ff4d7a;
+            box-shadow: 0 6px 18px rgba(255, 107, 157, 0.28);
+        }
+
+        /* Subtle grey button variant for secondary emphasis */
+        .btn.secondary {
+            background: rgba(180, 190, 205, 0.35);
+            border-color: var(--border);
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
+        /* Orange danger button (Delete) */
+        .btn.danger {
+            background: #ff8b3d;
+            color: #2b1300;
+            border-color: #ff7a1a;
+        }
+
+        /* Right-aligned button row */
+        .btn-row.end {
+            justify-content: flex-end;
+        }
+
+        /* Press feedback: invert colors briefly on press */
+        .btn:active,
+        .btn.primary:active {
+            filter: invert(1) hue-rotate(180deg);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        /* Small status badge */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .badge.connected {
+            background: #21d694;
+            color: #062d1e;
+            border-color: #14b67a;
+        }
+
+        .connection-card {
+            border-radius: var(--radius-sm);
+        }
+
+        /* Right column wrapper to stack cards vertically */
+        .right-column {
+            display: grid;
+            gap: var(--gap-lg);
+            align-content: start;
+        }
+
+        .brand-card {
+            min-height: 64px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .brand-card .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            margin: 0;
+        }
+
+        .brand-card .brand {
+            height: 28px;
+            width: 28px;
+        }
+
+        /* NexusUI theming hooks */
+        #voiceRadio canvas,
+        #avgPitchDial canvas,
+        #pitchRateDial canvas,
+        #breathinessDial canvas {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-row input#speakText,
+        .btn-row input#designedCommand {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        /* Ensure tooltip containers don't interfere with flex layout */
+        .btn-row .tooltip {
+            display: flex;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-row .tooltip:not(:first-child) {
+            flex: 0 0 auto;
+        }
+
+        .btn-row .tooltip:first-child {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        /* Right-aligned Update row: ensure full width and no wrapping */
+        .btn-row.end {
+            width: 100%;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+        }
+
+        /* In right-aligned rows (e.g., Update), keep tooltip wrapper sized to the button */
+        .btn-row.end .tooltip {
+            flex: 0 0 auto;
+            display: inline-block;
+        }
+
+        /* Override earlier first-child flex expansion for the Update row */
+        .btn-row.end .tooltip:first-child {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+
+        /* Align Update tooltip same as Speak (centered above the button) */
+        .btn-row.end .tooltip .tooltiptext {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+        }
+
+        /* Presets UI */
+        .presets-grid {
+            display: grid;
+            grid-template-columns: minmax(140px, 1fr) max-content minmax(180px, 1fr) max-content;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #presetName {
+            min-width: 160px;
+        }
+
+        #presetList {
+            min-width: 180px;
+            padding-right: 28px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aab3c2' d='M1.41 0L6 4.59 10.59 0 12 1.41 6 7.41 0 1.41z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px 8px;
+        }
+
+        .presets-actions {
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+        }
+
+        .voice-inline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .voice-legend {
+            --voice-count: 11;
+            display: grid;
+            grid-template-columns: repeat(var(--voice-count), 1fr);
+            gap: 0;
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .voice-legend span {
+            white-space: nowrap;
+        }
+
+        #voiceRadio {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #voiceLegend {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #voiceRadio canvas {
+            display: block;
+        }
+
+        label .range {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            opacity: 0.85;
+        }
+
+        /* 3x4 input matrix */
+        .matrix-rows {
+            display: grid;
+            gap: var(--gap-md);
+        }
+
+        .matrix-row {
+            display: grid;
+            grid-template-columns: max-content repeat(3, 1fr);
+            gap: var(--gap-md);
+            align-items: center;
+        }
+
+        .matrix-row input[type="text"] {
+            text-align: center;
+        }
+
+        .matrix-btn canvas {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .input-with-btn {
+            display: grid;
+            grid-template-columns: 1fr max-content;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .input-with-btn>div canvas {
+            height: 38px !important;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 4px var(--gap-md);
+            table-layout: fixed;
+        }
+
+        .matrix-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .matrix-table input[type="text"] {
+            width: 130%;
+            text-align: center;
+            display: block;
+        }
+
+        /* Buttons take fixed width; inputs get the remaining space */
+        .matrix-table td:nth-child(2),
+        .matrix-table td:nth-child(4),
+        .matrix-table td:nth-child(6) {
+            width: 20;
+        }
+
+        .mx-btn canvas {
+            height: 38px !important;
+            width: 28px !important;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: rgba(180, 190, 205, 0.35);
+        }
+
+        .mx-cell {
+            display: grid;
+            justify-items: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Pull the inputs closer to the preceding button (columns 3 and 5) */
+        .matrix-table td:nth-child(3) input[type="text"],
+        .matrix-table td:nth-child(5) input[type="text"] {
+            margin-left: -6px;
+        }
+
+        /* MIDI pads: 4 rows × 3 columns */
+        .pads-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--gap-md);
+        }
+
+        .pad-cell {
+            display: grid;
+            justify-items: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #midiPads canvas {
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .pad-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Matrix + pads side-by-side */
+        .matrix-pads {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--gap-lg);
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .matrix-pads {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card separator */
+        .card-sep {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 12px 0;
+        }
+
+        .input-with-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Remove bottom margin for compact label rows */
+        .compact-field {
+            margin-bottom: 0;
+        }
+
+        /* Pull the next grid row (Update button) closer to the pads */
+        .tight-after {
+            margin-bottom: calc(-0.5 * var(--gap-md));
+        }
+
+        .tight-after-more {
+            margin-bottom: calc(-0.75 * var(--gap-md));
+        }
+
+        /* Nudge the Update row upward */
+        .update-row {
+            margin-top: calc(-0.5 * var(--gap-md));
+        }
+
+        /* Serial monitor */
+        .log-area {
+            margin: 0;
+            padding: 10px 12px;
+            background: #21d694;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #062d1e;
+            max-height: 160px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Collapsible section styles */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            opacity: 0.8;
+        }
+
+        .collapsible-title-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .collapsible-toggle {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: transform 0.2s ease, color 0.2s ease;
+            margin-top: 2px;
+        }
+
+        .collapsible-toggle:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .collapsible-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            overflow: visible;
+            /* allow tooltips to extend outside */
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        /* Ensure grid children keep their layout when wrapped by collapsible-content */
+        .section-grid .collapsible-content {
+            display: contents;
+            /* children participate in parent grid */
+        }
+
+        .section-grid .collapsible-content.collapsed {
+            display: none;
+            /* hide all tuning rows when collapsed */
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--text);
+            color: var(--bg);
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 2147483647;
+            left: 50%;
+            bottom: calc(100% + 8px);
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            line-height: 1.4;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        /* Ensure cards don't create stacking context issues */
+        .card {
+            position: relative;
+            z-index: 1;
+        }
+
+        .right-column {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Ensure the left main card (tooltips) paints above the right column cards */
+        .main-card {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Force tooltips to appear above everything */
+        .tooltip {
+            z-index: 999999 !important;
+        }
+
+        .tooltip .tooltiptext {
+            z-index: 999999 !important;
+            position: absolute !important;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--text) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Tooltip positioning variants */
+        .tooltip-left .tooltiptext {
+            bottom: auto;
+            top: 50%;
+            left: auto;
+            right: 125%;
+            margin-left: 0;
+            margin-top: -20px;
+        }
+
+        .tooltip-left .tooltiptext::after {
+            top: 50%;
+            left: 100%;
+            margin-top: -5px;
+            margin-left: 0;
+            border-color: transparent var(--text) transparent transparent;
+        }
+
+        .tooltip-right .tooltiptext {
+            bottom: auto;
+            top: 50%;
+            right: auto;
+            left: 125%;
+            margin-left: 0;
+            margin-top: -20px;
+        }
+
+        .tooltip-right .tooltiptext::after {
+            top: 50%;
+            right: 100%;
+            left: auto;
+            margin-top: -5px;
+            margin-left: 0;
+            border-color: transparent transparent transparent var(--text);
+        }
+
+        /* Tooltip toggle styles */
+        .tooltip-toggle-container {
+            display: flex;
+            align-items: center;
+        }
+
+        #tooltipToggle {
+            padding: 8px 12px;
+            min-width: auto;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        #tooltipToggle.active {
+            background: #ffe8f0;
+            /* bulb background when ON */
+            color: var(--text);
+            border-color: #ff4d7a;
+        }
+
+        #tooltipToggle.active:hover {
+            background: #ff4d7a;
+        }
+
+        /* Tooltip visibility control */
+        .tooltips-disabled .tooltip .tooltiptext {
+            display: none !important;
+        }
+
+        .tooltips-disabled .tooltip:hover .tooltiptext {
+            display: none !important;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/nexusui@latest/dist/NexusUI.js"></script>
+</head>
+
+<body>
+    <main class="page">
+        <div class="page-header">
+            <div class="left">
+                <div class="title">Nexus
+                    vox designer</div>
+            </div>
+            <div class="subtitle">Polaxis - Nexus vox designer version 1.0</div>
+        </div>
+
+        <!-- Top: Serial Communication -->
+        <section class="stack" aria-label="Serial section">
+            <div class="card main-card" aria-labelledby="serial-title">
+                <div class="card-header">
+                    <div class="collapsible-title-container collapsible-header" id="tuningHeader">
+                        <h2 id="serial-title" class="card-title">Voice tuning</h2>
+                        <button class="collapsible-toggle" id="tuningToggleBtn" type="button"
+                            aria-label="Toggle Voice tuning">▼</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="section-grid">
+                        <div class="collapsible-content expanded" id="tuningSection">
+                            <div class="span-12 name-row">
+                                <div class="field">
+                                    <label>Name</label>
+                                    <div id="voiceRadio"></div>
+                                    <div class="voice-legend" id="voiceLegend" aria-hidden="true"></div>
+                                </div>
+                            </div>
+
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Average pitch <span class="range">50–500</span></label>
+                                        <span class="tooltiptext">Controls the base pitch of the voice. Higher values
+                                            make
+                                            the voice sound higher-pitched.</span>
+                                    </div>
+                                    <div id="avgPitchDial"></div>
+                                </div>
+                            </div>
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Pitch range <span class="range">0–100</span></label>
+                                        <span class="tooltiptext">Controls how much the pitch can vary during speech.
+                                            Higher
+                                            values allow more pitch variation.</span>
+                                    </div>
+                                    <div id="pitchRateDial"></div>
+                                </div>
+                            </div>
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Breathiness <span class="range">0–70</span></label>
+                                        <span class="tooltiptext">Adds breathy quality to the voice. Higher values make
+                                            the
+                                            voice sound more airy and whispery.</span>
+                                    </div>
+                                    <div id="breathinessDial"></div>
+                                </div>
+                            </div>
+
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Head size <span class="range">65–135</span></label>
+                                        <span class="tooltiptext">Simulates different head sizes affecting voice
+                                            resonance.
+                                            Lower values sound more child-like.</span>
+                                    </div>
+                                    <div id="headSizeDial"></div>
+                                </div>
+                            </div>
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Laryngealization <span class="range">0–100</span></label>
+                                        <span class="tooltiptext">Adds creaky or rough quality to the voice. Higher
+                                            values
+                                            create a more gravelly sound.</span>
+                                    </div>
+                                    <div id="laryngealizationDial"></div>
+                                </div>
+                            </div>
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Gain <span class="range">0–100</span></label>
+                                        <span class="tooltiptext">Controls the overall volume/amplitude of the voice
+                                            output.</span>
+                                    </div>
+                                    <div id="gainDial"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="span-12 tight-after-more">
+                            <div class="field compact-field">
+                                <h2 class="card-title">Command voice design</h2>
+                            </div>
+                        </div>
+
+                        <div class="span-12 tight-after-more">
+                            <div class="field">
+                                <label>Designed voice command (editable)</label>
+                                <div class="btn-row">
+                                    <div class="tooltip">
+                                        <input id="designedCommand" type="text"
+                                            placeholder="Command will appear here" />
+                                        <span class="tooltiptext">This field auto-updates when you adjust the dials
+                                            above,
+                                            but you can also edit it manually. Use Apply to send the command or Reset to
+                                            restore defaults.</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <button id="applyDesignedBtn" class="btn primary" type="button">Apply</button>
+                                        <span class="tooltiptext">Sends the current command text to the device
+                                            immediately.</span>
+                                    </div>
+                                    <div class="tooltip">
+                                        <button id="resetBtn" class="btn secondary" type="button">Reset</button>
+                                        <span class="tooltiptext">Resets all voice parameters to their default
+                                            values.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="span-12 tight-after">
+                            <div class="field compact-field">
+                                <h2 class="card-title">Voice test</h2>
+                            </div>
+                        </div>
+
+                        <div class="span-12">
+                            <div class="btn-row">
+                                <input id="speakText" type="text" placeholder="Type text to speak"
+                                    aria-label="Speak text" />
+                                <div class="tooltip">
+                                    <button id="speakBtn" class="btn primary" type="button">Speak</button>
+                                    <span class="tooltiptext">Speaks the text using the current voice settings and sends
+                                        it to the device.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="span-12 tight-after-more">
+                            <div class="field">
+                                <h2 class="card-title">Presets</h2>
+                                <div class="presets-grid">
+                                    <input id="presetName" type="text" placeholder="Preset name" />
+                                    <button id="presetSaveBtn" class="btn primary" type="button">Save</button>
+                                    <select id="presetList" aria-label="Saved presets"></select>
+                                    <div class="btn-row presets-actions">
+                                        <button id="presetDeleteBtn" class="btn danger" type="button">Delete</button>
+                                        <button id="presetExportBtn" class="btn" type="button">Export</button>
+                                        <input id="presetImportInput" type="file" accept="application/json"
+                                            style="display:none" />
+                                        <button id="presetImportBtn" class="btn" type="button">Import</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="span-12 tight-after">
+                            <div class="matrix-pads">
+                                <div class="field pads-field">
+                                    <div class="collapsible-header" id="midiPadsHeader">
+                                        <div class="collapsible-title-container">
+                                            <div class="tooltip">
+                                                <h2 class="card-title">MIDI notes pads</h2>
+                                                <span class="tooltiptext">
+                                                    Enter text for each MIDI notes. Use Update to store them in Kraftor.
+                                                    Click the pads to send MIDI notes (36-47).</span>
+                                            </div>
+                                            <button class="collapsible-toggle" id="midiPadsToggle" type="button"
+                                                aria-label="Toggle MIDI pads section">▼</button>
+                                        </div>
+                                    </div>
+                                    <div class="collapsible-content expanded" id="midiPadsContent">
+                                        <table class="matrix-table" id="matrixGrid">
+                                            <tbody>
+                                                <tr>
+                                                    <td><input type="text" id="m_0_0" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_36"></div>
+                                                        <div class="pad-label">36</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_0_1" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_37"></div>
+                                                        <div class="pad-label">37</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_0_2" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_38"></div>
+                                                        <div class="pad-label">38</div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><input type="text" id="m_1_0" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_39"></div>
+                                                        <div class="pad-label">39</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_1_1" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_40"></div>
+                                                        <div class="pad-label">40</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_1_2" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_41"></div>
+                                                        <div class="pad-label">41</div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><input type="text" id="m_2_0" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_42"></div>
+                                                        <div class="pad-label">42</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_2_1" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_43"></div>
+                                                        <div class="pad-label">43</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_2_2" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_44"></div>
+                                                        <div class="pad-label">44</div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><input type="text" id="m_3_0" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_45"></div>
+                                                        <div class="pad-label">45</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_3_1" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_46"></div>
+                                                        <div class="pad-label">46</div>
+                                                    </td>
+                                                    <td><input type="text" id="m_3_2" /></td>
+                                                    <td class="mx-cell">
+                                                        <div class="mx-btn" id="pad_47"></div>
+                                                        <div class="pad-label">47</div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="btn-row end" style="margin-top: 16px;">
+                                            <div class="tooltip">
+                                                <button id="matrixUpdateBtn" class="btn primary"
+                                                    type="button">Update</button>
+                                                <span class="tooltiptext">Sends all text from the input fields as a
+                                                    single command to the device.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="card brand-card" aria-label="Brand">
+                    <div class="card-body">
+                        <div class="brand-header">
+                            <div class="brand-title">Nexus vox designer</div>
+                            <div class="tooltip-toggle-container">
+                                <div class="tooltip">
+                                    <button id="tooltipToggle" class="btn secondary" type="button"
+                                        aria-label="Toggle tooltips">
+                                        <span id="tooltipIcon">💡</span>
+                                    </button>
+                                    <span class="tooltiptext">Toggle tooltips on/off</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="muted">Version 1.0</div>
+                        <div class="muted"><a href="https://www.polaxis.be/" target="_blank"
+                                rel="noopener noreferrer">Polaxis</a></div>
+                    </div>
+                </div>
+                <aside class="card connection-card" aria-labelledby="serial-conn-title">
+                    <div class="card-header">
+                        <h3 id="serial-conn-title" class="card-title">Connections</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="field">
+                            <label>Serial port</label>
+                            <select id="serialPortSelect" aria-label="Serial port">
+                                <option>— Not connected —</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Status</label>
+                            <div><span id="serialStatusText" class="muted">Not connected</span><span
+                                    id="serialStatusBadge" class="badge">OFF</span></div>
+                        </div>
+                        <div class="btn-row">
+                            <button id="serialConnectBtn" class="btn primary" type="button">Connect</button>
+                            <button id="serialRefreshBtn" class="btn" type="button">Refresh</button>
+                        </div>
+
+                        <div id="serialFirmwareRow" class="field" style="display:none; margin-top: 4px;">
+                            <label>Firmware Version</label>
+                            <div id="serialFirmware" class="muted">—</div>
+                        </div>
+
+                        <hr class="card-sep" />
+                        <div class="field">
+                            <label>MIDI Output</label>
+                            <select id="midiOutputSelect" aria-label="MIDI output">
+                                <option value="">— Not connected —</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Status</label>
+                            <div><span id="midiStatusText" class="muted">Not connected</span><span id="midiStatusBadge"
+                                    class="badge">OFF</span></div>
+                        </div>
+                        <div class="btn-row">
+                            <button id="midiConnectBtn" class="btn primary" type="button">Connect</button>
+                            <button id="midiRefreshBtn" class="btn" type="button">Refresh</button>
+                        </div>
+                    </div>
+                </aside>
+                <div class="card" aria-label="Serial incoming">
+                    <div class="card-header">
+                        <h3 class="card-title">Serial Monitoring</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre id="serialIncoming" class="log-area"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Collapsible Voice tuning
+            (function setupTuningCollapse() {
+                const header = document.getElementById('tuningHeader');
+                const toggle = document.getElementById('tuningToggleBtn');
+                const content = document.getElementById('tuningSection');
+                if (!header || !toggle || !content) return;
+                function toggleCollapse() {
+                    const isCollapsed = content.classList.contains('collapsed');
+                    if (isCollapsed) {
+                        content.classList.remove('collapsed');
+                        content.classList.add('expanded');
+                        toggle.textContent = '▼';
+                        toggle.classList.remove('collapsed');
+                    } else {
+                        content.classList.add('collapsed');
+                        content.classList.remove('expanded');
+                        toggle.textContent = '▶';
+                        toggle.classList.add('collapsed');
+                    }
+                }
+                header.addEventListener('click', (e) => {
+                    if ((e.target && e.target.id) === 'tuningToggleBtn') return;
+                    toggleCollapse();
+                });
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCollapse();
+                });
+                toggle.textContent = '▼';
+            })();
+            if (window.Nexus && Nexus.colors) {
+                Nexus.colors.accent = '#ff6b9d';
+                Nexus.colors.fill = 'rgba(255,255,255,0.06)';
+                Nexus.colors.dark = '#0b0d10';
+                Nexus.colors.light = '#e7eaf0';
+                Nexus.colors.medium = 'rgba(255,255,255,0.12)';
+            }
+
+            // Voice list (from main.cpp)
+            const voices = ["Perfect Paul", "Vader", "Big Bob", "Precise Pete", "Ricochet Randy", "Biff", "Skip", "Robo Robert", "Goliath", "Alvin", "Gretchen"];
+
+            // Voice radio (NexusUI) with spacing matched to legend width
+            function renderVoiceRadio() {
+                try {
+                    const container = document.getElementById('voiceRadio');
+                    const legendEl = document.getElementById('voiceLegend');
+                    if (!container) return;
+                    const parentWidth = container.parentElement ? container.parentElement.getBoundingClientRect().width : 0;
+                    const desired = Math.max(360, voices.length * 56);
+                    const width = parentWidth ? Math.min(Math.max(desired, parentWidth - 8), 1200) : desired;
+                    container.innerHTML = '';
+                    const radio = new Nexus.RadioButton('#voiceRadio', {
+                        size: [width, 28],
+                        numberOfButtons: voices.length,
+                        active: 0
+                    });
+                    // Send serial command on selection: /v{index} + CRLF
+                    radio.on('change', function (value) {
+                        let idx = (typeof value === 'number') ? value : (value && (value.index ?? value.value));
+                        idx = (idx == null) ? 0 : (idx | 0);
+                        if (typeof window.sendSerialLine === 'function') {
+                            window.sendSerialLine(`/v${idx}`);
+                        }
+                    });
+                    if (legendEl) {
+                        legendEl.style.width = width + 'px';
+                        legendEl.innerHTML = voices.map(v => `<span>${v}</span>`).join('');
+                    }
+                } catch (e) {
+                    // Ignore if Nexus isn't loaded
+                }
+            }
+            renderVoiceRadio();
+            window.addEventListener('resize', renderVoiceRadio);
+
+            // Dials (NexusUI)
+            function makeDial(selector, min, max, value) {
+                try {
+                    return new Nexus.Dial(selector, {
+                        size: [90, 90],
+                        interaction: 'radial',
+                        mode: 'relative',
+                        min: min,
+                        max: max,
+                        step: 1,
+                        value: value
+                    });
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            let designedCommandSendDebounce = null;
+            let designedManualOverride = false;
+            const avgPitchDial = makeDial('#avgPitchDial', 50, 500, 112);
+            const pitchRateDial = makeDial('#pitchRateDial', 0, 100, 100);
+            const breathinessDial = makeDial('#breathinessDial', 0, 70, 0);
+            const headSizeDial = makeDial('#headSizeDial', 65, 135, 100);
+            const laryngealizationDial = makeDial('#laryngealizationDial', 0, 100, 0);
+            const gainDial = makeDial('#gainDial', 0, 100, 100);
+
+            let designedInputEditing = false;
+            function updateDesignedCommand() {
+                if (designedManualOverride) return;
+                const parts = [];
+                try { if (avgPitchDial) parts.push('ap ' + Math.round(Number(avgPitchDial.value || 0))); } catch { }
+                try { if (pitchRateDial) parts.push('pr ' + Math.round(Number(pitchRateDial.value || 0))); } catch { }
+                try { if (breathinessDial) parts.push('br ' + Math.round(Number(breathinessDial.value || 0))); } catch { }
+                try { if (headSizeDial) parts.push('hs ' + Math.round(Number(headSizeDial.value || 0))); } catch { }
+                try { if (laryngealizationDial) parts.push('la ' + Math.round(Number(laryngealizationDial.value || 0))); } catch { }
+                try { if (gainDial) parts.push('g5 ' + Math.round(Number(gainDial.value || 0))); } catch { }
+                const input = document.getElementById('designedCommand');
+                const cmdString = parts.join(' ');
+                if (input && !designedInputEditing) input.value = cmdString;
+                // Debounced send of designed command: /d <string>
+                try {
+                    if (designedInputEditing) return; // don't auto-send while user is editing
+                    clearTimeout(designedCommandSendDebounce);
+                    designedCommandSendDebounce = setTimeout(() => {
+                        if (typeof window.sendSerialLine === 'function' && cmdString) {
+                            window.sendSerialLine('/d ' + cmdString);
+                        }
+                    }, 250);
+                } catch { }
+            }
+
+            // Pause auto-update while editing designed command; resume on blur
+            (function attachDesignedInputHandlers() {
+                const input = document.getElementById('designedCommand');
+                if (!input) return;
+                input.addEventListener('focus', () => { designedInputEditing = true; });
+                input.addEventListener('blur', () => { designedInputEditing = false; /* keep manual text until dial moves */ });
+                document.getElementById('applyDesignedBtn')?.addEventListener('click', async () => {
+                    const text = (input.value || '').trim().replace(/\s+/g, ' ');
+                    if (!text) return;
+                    designedManualOverride = true;
+                    if (typeof window.sendSerialLine === 'function') {
+                        await window.sendSerialLine('/d ' + text);
+                    }
+                });
+            })();
+
+            // Update command on dial changes
+            try { avgPitchDial && avgPitchDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+            try { pitchRateDial && pitchRateDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+            try { breathinessDial && breathinessDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+            try { headSizeDial && headSizeDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+            try { laryngealizationDial && laryngealizationDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+            try { gainDial && gainDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
+
+            // Initialize with defaults
+            updateDesignedCommand();
+            // Lightweight notifications (toasts)
+            function notify(message, level = 'info') {
+                try {
+                    let container = document.getElementById('toastContainer');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'toastContainer';
+                        container.style.position = 'fixed';
+                        container.style.left = '50%';
+                        container.style.transform = 'translateX(-50%)';
+                        container.style.bottom = '18px';
+                        container.style.display = 'flex';
+                        container.style.flexDirection = 'column';
+                        container.style.gap = '8px';
+                        container.style.zIndex = '2147483647';
+                        container.style.pointerEvents = 'none';
+                        document.body.appendChild(container);
+                    }
+                    const toast = document.createElement('div');
+                    toast.textContent = String(message || '');
+                    toast.style.pointerEvents = 'auto';
+                    toast.style.padding = '10px 12px';
+                    toast.style.borderRadius = '8px';
+                    toast.style.border = '1px solid var(--border)';
+                    toast.style.boxShadow = 'var(--shadow)';
+                    toast.style.fontSize = '13px';
+                    toast.style.maxWidth = '72vw';
+                    toast.style.textAlign = 'center';
+                    toast.style.margin = '0 auto';
+                    // Color by level
+                    if (level === 'success') { toast.style.background = '#21d694'; toast.style.color = '#062d1e'; toast.style.borderColor = '#14b67a'; }
+                    else if (level === 'warning') { toast.style.background = '#ffed88'; toast.style.color = '#3b2a00'; toast.style.borderColor = '#e6cf4a'; }
+                    else if (level === 'error') { toast.style.background = '#ff6b6b'; toast.style.color = '#2b0a0a'; toast.style.borderColor = '#ff5252'; }
+                    else { toast.style.background = 'rgba(0,0,0,0.75)'; toast.style.color = '#ffffff'; toast.style.borderColor = 'rgba(255,255,255,0.2)'; }
+                    container.appendChild(toast);
+                    setTimeout(() => { try { container.removeChild(toast); } catch { } }, 2200);
+                    toast.addEventListener('click', () => { try { container.removeChild(toast); } catch { } });
+                } catch { }
+            }
+            // ===== Presets storage helpers =====
+            const PRESET_KEY = 'vax.presets.v1';
+            function loadPresets() {
+                try { const raw = localStorage.getItem(PRESET_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
+            }
+            function savePresets(list) {
+                try { localStorage.setItem(PRESET_KEY, JSON.stringify(list)); } catch { }
+            }
+            function makePresetId() { return 'p_' + Math.random().toString(36).slice(2, 10); }
+            function currentCmdString() {
+                const input = document.getElementById('designedCommand');
+                return (input?.value || '').trim();
+            }
+            function refreshPresetList(selectedId) {
+                const sel = document.getElementById('presetList'); if (!sel) return;
+                const presets = loadPresets();
+                sel.innerHTML = '';
+                presets.forEach(p => { const opt = document.createElement('option'); opt.value = p.id; opt.textContent = p.name || p.id; opt.title = p.cmd; sel.appendChild(opt); });
+                if (selectedId) sel.value = selectedId;
+            }
+            refreshPresetList();
+
+            async function applyPresetById(id) {
+                const list = loadPresets();
+                const p = list.find(x => x.id === id);
+                if (!p) return;
+                // Apply designed command text and send
+                const input = document.getElementById('designedCommand'); if (input) input.value = p.cmd || '';
+                designedManualOverride = true; // lock until a dial moves
+                if (window.sendSerialLine && p.cmd) await window.sendSerialLine('/d ' + p.cmd);
+                try { notify(`Loaded preset "${(p.name || 'Preset')}"`, 'success'); } catch { }
+            }
+
+            // ===== Presets actions =====
+            document.getElementById('presetSaveBtn')?.addEventListener('click', () => {
+                const nameRaw = (document.getElementById('presetName')?.value || '').trim();
+                const cmd = currentCmdString();
+                if (!cmd) return;
+                const list = loadPresets();
+                const sel = document.getElementById('presetList');
+                const selectedId = sel ? sel.value : '';
+
+                // Helper: normalize name for comparison
+                const norm = (s) => (s || '').trim().toLowerCase();
+
+                // Case 1: specific name entered → overwrite by name if exists, else create new with that name
+                if (nameRaw) {
+                    const idx = list.findIndex(p => norm(p.name) === norm(nameRaw));
+                    if (idx >= 0) {
+                        const keepId = list[idx].id;
+                        list[idx] = { ...list[idx], name: list[idx].name, cmd, updatedAt: Date.now() };
+                        savePresets(list); refreshPresetList(keepId);
+                        notify(`Updated preset "${list[idx].name}"`, 'success');
+                        return;
+                    }
+                    const id = makePresetId();
+                    list.push({ id, name: nameRaw, cmd, createdAt: Date.now() });
+                    savePresets(list); refreshPresetList(id);
+                    notify(`Saved "${nameRaw}"`, 'success');
+                    return;
+                }
+
+                // Case 2: no name entered
+                // If a preset is selected → overwrite that one; otherwise ask for a name
+                if (selectedId) {
+                    const idx = list.findIndex(p => p.id === selectedId);
+                    if (idx >= 0) {
+                        list[idx] = { ...list[idx], cmd, updatedAt: Date.now() };
+                        savePresets(list); refreshPresetList(selectedId);
+                        notify(`Updated preset "${list[idx].name || 'Preset'}"`, 'success');
+                        return;
+                    }
+                }
+
+                // No name and none selected: prompt for a name and bail if not provided
+                const prompted = (window.prompt && window.prompt('Preset name?') || '').trim();
+                if (!prompted) { notify('Please enter a preset name to save.', 'warning'); return; }
+                const idx = list.findIndex(p => norm(p.name) === norm(prompted));
+                if (idx >= 0) {
+                    const keepId = list[idx].id;
+                    list[idx] = { ...list[idx], name: list[idx].name, cmd, updatedAt: Date.now() };
+                    savePresets(list); refreshPresetList(keepId);
+                    notify(`Updated preset "${list[idx].name}"`, 'success');
+                } else {
+                    const id = makePresetId();
+                    list.push({ id, name: prompted, cmd, createdAt: Date.now() });
+                    savePresets(list); refreshPresetList(id);
+                    notify(`Saved "${prompted}"`, 'success');
+                }
+            });
+
+            document.getElementById('presetApplyBtn')?.addEventListener('click', async () => {
+                const sel = document.getElementById('presetList'); if (!sel) return; const id = sel.value; if (!id) return;
+                await applyPresetById(id);
+            });
+
+            // Apply immediately when a preset is selected
+            document.getElementById('presetList')?.addEventListener('change', async (e) => {
+                const id = e.target.value; if (!id) return;
+                await applyPresetById(id);
+            });
+
+            document.getElementById('presetDeleteBtn')?.addEventListener('click', () => {
+                const sel = document.getElementById('presetList'); if (!sel) return; const id = sel.value; if (!id) return;
+                const listAll = loadPresets();
+                const toDelete = listAll.find(p => p.id === id);
+                const list = listAll.filter(x => x.id !== id); savePresets(list); refreshPresetList();
+                try { notify(`Deleted preset “${toDelete?.name || 'Preset'}”`, 'success'); } catch { }
+            });
+
+            document.getElementById('presetExportBtn')?.addEventListener('click', () => {
+                const presets = loadPresets();
+                const data = JSON.stringify(presets, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'vax-presets.json'; a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 0);
+                try { notify(`Exported ${presets.length} preset${presets.length === 1 ? '' : 's'}.`, 'success'); } catch { }
+            });
+
+            document.getElementById('presetImportBtn')?.addEventListener('click', () => {
+                document.getElementById('presetImportInput')?.click();
+            });
+            document.getElementById('presetImportInput')?.addEventListener('change', async (e) => {
+                try {
+                    const file = e.target.files && e.target.files[0]; if (!file) return;
+                    const text = await file.text(); const incoming = JSON.parse(text);
+                    const importedArray = Array.isArray(incoming) ? incoming : (Array.isArray(incoming?.presets) ? incoming.presets : null);
+                    if (!importedArray) { try { notify('Import failed: file has no presets array.', 'error'); } catch { } e.target.value = ''; return; }
+                    const existing = loadPresets();
+                    const beforeCount = existing.length;
+                    // Merge by name+cmd uniqueness; create new ids
+                    const merged = [...existing];
+                    let added = 0;
+                    importedArray.forEach(p => {
+                        const name = (p?.name || '').trim(); const cmd = (p?.cmd || '').trim();
+                        if (!cmd) return;
+                        const dup = merged.find(x => (x.name || '') === name && (x.cmd || '') === cmd);
+                        if (!dup) { merged.push({ id: makePresetId(), name: name || 'Preset', cmd, createdAt: Date.now() }); added++; }
+                    });
+                    savePresets(merged);
+                    // If previously empty and we imported any, select and apply the first imported preset
+                    if (beforeCount === 0 && merged.length > 0) {
+                        const firstId = merged[0].id;
+                        refreshPresetList(firstId);
+                        await applyPresetById(firstId);
+                        try { notify(`Imported ${added} preset${added === 1 ? '' : 's'} and loaded “${merged[0].name || 'Preset'}”.`, 'success'); } catch { }
+                    } else {
+                        refreshPresetList();
+                        try { if (added > 0) notify(`Imported ${added} preset${added === 1 ? '' : 's'}.`, 'success'); else notify('No new presets to import (all duplicates).', 'warning'); } catch { }
+                    }
+                    try { e.target.value = ''; } catch { }
+                } catch { }
+            });
+            // Reset button: set default values
+            document.getElementById('resetBtn')?.addEventListener('click', () => {
+                try { if (avgPitchDial) avgPitchDial.value = 112; } catch { }
+                try { if (pitchRateDial) pitchRateDial.value = 100; } catch { }
+                try { if (breathinessDial) breathinessDial.value = 0; } catch { }
+                try { if (headSizeDial) headSizeDial.value = 100; } catch { }
+                try { if (laryngealizationDial) laryngealizationDial.value = 0; } catch { }
+                try { if (gainDial) gainDial.value = 100; } catch { }
+                designedManualOverride = false;
+                updateDesignedCommand();
+            });
+            // Matrix row buttons
+            try {
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        const id = `#mx_btn_${r}_${c}`;
+                        const host = document.querySelector(id);
+                        if (host) {
+                            new Nexus.Button(id, { size: [36, 36], mode: 'button' });
+                        }
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+
+            // Collapsible MIDI pads functionality
+            function initCollapsibleMidiPads() {
+                const header = document.getElementById('midiPadsHeader');
+                const toggle = document.getElementById('midiPadsToggle');
+                const content = document.getElementById('midiPadsContent');
+
+                if (!header || !toggle || !content) return;
+
+                function toggleCollapse() {
+                    const isCollapsed = content.classList.contains('collapsed');
+
+                    if (isCollapsed) {
+                        content.classList.remove('collapsed');
+                        content.classList.add('expanded');
+                        toggle.textContent = '▼';
+                        toggle.classList.remove('collapsed');
+                    } else {
+                        content.classList.remove('expanded');
+                        content.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                        toggle.classList.add('collapsed');
+                    }
+                }
+
+                // Add click handlers
+                header.addEventListener('click', toggleCollapse);
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCollapse();
+                });
+
+                // Initialize as expanded by default
+                content.classList.add('expanded');
+                toggle.textContent = '▼';
+            }
+
+            // Initialize collapsible functionality
+            initCollapsibleMidiPads();
+
+            // Tooltip toggle functionality
+            function initTooltipToggle() {
+                const toggle = document.getElementById('tooltipToggle');
+                const icon = document.getElementById('tooltipIcon');
+                const body = document.body;
+
+                if (!toggle || !icon) return;
+
+                // Load saved state from localStorage
+                const tooltipsEnabled = localStorage.getItem('vax.tooltips.enabled') !== 'false';
+                updateTooltipState(tooltipsEnabled);
+
+                toggle.addEventListener('click', () => {
+                    const currentlyEnabled = !body.classList.contains('tooltips-disabled');
+                    const newState = !currentlyEnabled;
+                    updateTooltipState(newState);
+                    localStorage.setItem('vax.tooltips.enabled', newState.toString());
+                });
+
+                function updateTooltipState(enabled) {
+                    if (enabled) {
+                        body.classList.remove('tooltips-disabled');
+                        toggle.classList.add('active');
+                        icon.textContent = '💡';
+                        toggle.setAttribute('aria-pressed', 'true');
+                    } else {
+                        body.classList.add('tooltips-disabled');
+                        toggle.classList.remove('active');
+                        icon.textContent = '💤';
+                        toggle.setAttribute('aria-pressed', 'false');
+                    }
+                }
+            }
+
+            // Initialize tooltip toggle
+            initTooltipToggle();
+
+            // Remove JS positioning; rely on CSS-only for stable placement above labels
+        });
+    </script>
+    <script>
+        // Web Serial: choose a serial port, connect, send Speak text with CRLF
+        (function () {
+            let serialPort = null;
+            let serialWriter = null;
+            let serialDecoder = null;
+            let serialReader = null;
+            let serialReadableClosed = null;
+            let firmwareCaptureActive = false;
+            let firmwareCandidate = '';
+
+            function requestFirmwareAfter(delayMs) {
+                try {
+                    firmwareCaptureActive = true;
+                    firmwareCandidate = '';
+                    const row = document.getElementById('serialFirmwareRow');
+                    const el = document.getElementById('serialFirmware');
+                    if (row && el) { row.style.display = ''; el.textContent = ''; }
+                    setTimeout(() => {
+                        try {
+                            // Log explicitly for debugging
+                            const pre = document.getElementById('serialIncoming');
+                            if (pre) { pre.textContent += '>> /f (auto)\r\n'; pre.scrollTop = pre.scrollHeight; }
+                            window.sendSerialLine && window.sendSerialLine('/f');
+                        } catch { }
+                    }, Math.max(0, Number(delayMs || 0)));
+                } catch { }
+            }
+            function requestFirmwareSequence() {
+                // First attempt shortly after connect, then a backup a bit later
+                requestFirmwareAfter(800);
+                setTimeout(() => {
+                    // If nothing captured yet (no candidate and capture not active), try again
+                    const hasText = (document.getElementById('serialFirmware')?.textContent || '').trim().length > 0;
+                    if (!firmwareCaptureActive && !hasText) {
+                        requestFirmwareAfter(2000);
+                    }
+                }, 2200);
+            }
+
+            const supportsSerial = 'serial' in navigator;
+            let rememberedPorts = [];
+
+            function formatProductId(info) {
+                const d = info && info.usbProductId;
+                return (d != null) ? String(d) : '';
+            }
+
+            function formatVidPid(info) {
+                const v = info && info.usbVendorId;
+                const d = info && info.usbProductId;
+                if (v != null && d != null) {
+                    const toHex = n => n.toString(16).padStart(4, '0').toUpperCase();
+                    return `USB ${toHex(v)}:${toHex(d)}`;
+                }
+                return '';
+            }
+
+            async function tryGetUsbProductName(vendorId, productId) {
+                try {
+                    if (!('usb' in navigator)) return null;
+                    const devices = await navigator.usb.getDevices(); // only already-authorized devices
+                    const dev = devices.find(d => d.vendorId === vendorId && d.productId === productId);
+                    return dev ? (dev.productName || null) : null;
+                } catch { return null; }
+            }
+
+            // Resolve a human-readable device name similar to Echo.html
+            async function resolveDeviceName(p) {
+                try {
+                    if (!p || !p.getInfo) return '';
+                    const info = p.getInfo();
+                    const fallback = formatVidPid(info) || formatProductId(info) || '';
+                    if (navigator.usb && info && info.usbVendorId != null) {
+                        const vid = info.usbVendorId; const pid = info.usbProductId;
+                        const devices = await navigator.usb.getDevices();
+                        let device = devices.find(d => d.vendorId === vid && (pid == null || d.productId === pid));
+                        if (!device) {
+                            try {
+                                const filters = [{ vendorId: vid }];
+                                if (pid != null) filters[0].productId = pid;
+                                device = await navigator.usb.requestDevice({ filters });
+                            } catch { return fallback; }
+                        }
+                        const name = [device.manufacturerName, device.productName].filter(Boolean).join(' ');
+                        return name || fallback;
+                    }
+                    return fallback;
+                } catch { return ''; }
+            }
+
+            async function listRememberedPorts() {
+                try {
+                    rememberedPorts = await navigator.serial.getPorts();
+                    const sel = document.getElementById('serialPortSelect');
+                    if (!sel) return;
+                    const current = sel.value;
+                    sel.innerHTML = '<option value="">— Not connected —</option>';
+                    rememberedPorts.forEach((p, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = String(idx);
+                        const info = p.getInfo ? p.getInfo() : undefined;
+                        const label = formatProductId(info) || formatVidPid(info) || `Port ${idx}`;
+                        opt.textContent = label;
+                        opt.title = label;
+                        opt.dataset.index = String(idx);
+                        sel.appendChild(opt);
+
+                        // Asynchronously resolve to human-readable name (may prompt once for permission)
+                        (async () => {
+                            try {
+                                const name = await resolveDeviceName(p);
+                                if (name) { opt.textContent = name; opt.title = name; }
+                            } catch { }
+                        })();
+                    });
+                    if (current) sel.value = current;
+                } catch { }
+            }
+
+            async function requestAndConnect() {
+                try {
+                    serialPort = await navigator.serial.requestPort();
+                    await serialPort.open({ baudRate: 115200 });
+                    serialWriter = serialPort.writable?.getWriter() || null;
+                    await listRememberedPorts();
+                    updateSerialUi();
+                    // While still within the user gesture, try to resolve and show a friendly device name
+                    try {
+                        const name = await resolveDeviceName(serialPort);
+                        if (name) {
+                            const sel = document.getElementById('serialPortSelect');
+                            const text = document.getElementById('serialStatusText');
+                            if (text) text.textContent = 'Connected to ' + name;
+                            if (sel) {
+                                const idx = (sel.value && sel.value !== '') ? Number(sel.value) : -1;
+                                if (idx >= 0 && sel.options[idx + 1]) { sel.options[idx + 1].textContent = name; sel.options[idx + 1].title = name; }
+                                let cur = sel.querySelector('option[value="current"]');
+                                if (cur) { cur.textContent = name; cur.title = name; }
+                            }
+                        }
+                    } catch { }
+                    appendSerialLog('<< CONNECTED\r\n');
+                    // Start reader once and request firmware after a short delay
+                    await startSerialReader();
+                    requestFirmwareSequence();
+                } catch { }
+            }
+
+            async function disconnectSerial() {
+                try {
+                    if (serialReader) { try { await serialReader.cancel(); } catch { } try { serialReader.releaseLock(); } catch { } serialReader = null; }
+                    if (serialReadableClosed) { try { await serialReadableClosed.catch(() => { }); } catch { } serialReadableClosed = null; }
+                    serialDecoder = null;
+                    if (serialWriter) { serialWriter.releaseLock(); serialWriter = null; }
+                    if (serialPort) { await serialPort.close(); }
+                } catch { }
+                serialPort = null;
+                updateSerialUi();
+            }
+
+            function updateSerialUi() {
+                const btn = document.getElementById('serialConnectBtn');
+                const text = document.getElementById('serialStatusText');
+                const badge = document.getElementById('serialStatusBadge');
+                const sel = document.getElementById('serialPortSelect');
+                const connected = Boolean(serialPort && serialPort.readable && serialPort.writable);
+                if (btn) btn.textContent = connected ? 'Disconnect' : 'Connect';
+                if (text) text.textContent = connected ? 'Connected' : 'Not connected';
+                if (badge) {
+                    badge.textContent = connected ? 'ON' : 'OFF';
+                    badge.classList.toggle('connected', connected);
+                }
+                if (sel) {
+                    // Try to select the connected port in the dropdown
+                    sel.disabled = connected;
+                    if (connected) {
+                        const idx = rememberedPorts.findIndex(p => p === serialPort);
+                        if (idx >= 0) {
+                            sel.value = String(idx);
+                            // Upgrade label to resolved human-readable name (manufacturer + product)
+                            resolveDeviceName(serialPort).then(name => {
+                                if (!name) return;
+                                const opt = sel.options[idx + 1]; // +1 due to placeholder
+                                if (opt) { opt.textContent = name; opt.title = name; }
+                            });
+                        } else {
+                            // Add a temporary "Current" option if the port isn't in the list yet
+                            let cur = sel.querySelector('option[value="current"]');
+                            if (!cur) {
+                                cur = document.createElement('option');
+                                cur.value = 'current';
+                                const info = serialPort.getInfo ? serialPort.getInfo() : undefined;
+                                let label = formatProductId(info) || formatVidPid(info) || 'Current port';
+                                cur.textContent = label;
+                                cur.title = label;
+                                sel.appendChild(cur);
+
+                                resolveDeviceName(serialPort).then(name => {
+                                    if (name) { cur.textContent = name; cur.title = name; }
+                                });
+                            }
+                            sel.value = 'current';
+                        }
+                    } else {
+                        // When disconnected, reset to placeholder
+                        sel.value = '';
+                    }
+                }
+
+                // Keep status concise; dropdown already shows device name
+            }
+
+            async function sendSerialLine(line) {
+                if (!serialWriter) return;
+                const encoder = new TextEncoder();
+                const data = encoder.encode(line + '\r\n');
+                try {
+                    await serialWriter.write(data);
+                    appendSerialLog(`>> ${line}\r\n`);
+                    // If user requests firmware manually, start a capture window
+                    if (String(line).trim() === '/f') {
+                        firmwareCaptureActive = true;
+                        firmwareCandidate = '';
+                        const row = document.getElementById('serialFirmwareRow');
+                        const el = document.getElementById('serialFirmware');
+                        if (row && el) { row.style.display = ''; el.textContent = fw || el.textContent || ''; }
+                    }
+                } catch { }
+            }
+            // Expose for other scripts (voice radio)
+            window.sendSerialLine = sendSerialLine;
+
+            function appendSerialLog(text) {
+                const pre = document.getElementById('serialIncoming');
+                if (!pre) return;
+                pre.textContent += text;
+                pre.scrollTop = pre.scrollHeight;
+            }
+
+            async function startSerialReader() {
+                try {
+                    if (!serialPort || !serialPort.readable || serialReader) return;
+                    // Prefer TextDecoderStream, fall back to manual decode
+                    if ('TextDecoderStream' in window) {
+                        serialDecoder = new TextDecoderStream();
+                        serialReadableClosed = serialPort.readable.pipeTo(serialDecoder.writable);
+                        serialReader = serialDecoder.readable.getReader();
+                    } else {
+                        serialDecoder = null;
+                        serialReadableClosed = null;
+                        serialReader = serialPort.readable.getReader();
+                    }
+                    appendSerialLog('<< READER READY\r\n');
+                    // Kick an immediate firmware request once the reader is ready (in addition to the later retry)
+                    try { requestFirmwareAfter(0); } catch { }
+                    let buffer = '';
+                    let lastLine = '';
+                    const byteDecoder = (!serialDecoder && typeof TextDecoder !== 'undefined') ? new TextDecoder() : null;
+                    while (true) {
+                        const { value, done } = await serialReader.read();
+                        if (done) break;
+                        if (value) {
+                            const chunk = (typeof value === 'string') ? value : (byteDecoder ? byteDecoder.decode(value) : '');
+                            if (!chunk) continue;
+                            appendSerialLog(chunk);
+                            buffer += chunk;
+                            while (true) {
+                                const idx = buffer.search(/[\r\n]/);
+                                if (idx === -1) break;
+                                const line = buffer.slice(0, idx);
+                                let skip = 1;
+                                if (buffer[idx] === '\r' && buffer[idx + 1] === '\n') skip = 2;
+                                buffer = buffer.slice(idx + skip);
+                                const trimmed = line.trim();
+                                if (firmwareCaptureActive) {
+                                    if (trimmed.indexOf('$') !== -1) {
+                                        const fw = (firmwareCandidate || '').trim();
+                                        const row = document.getElementById('serialFirmwareRow');
+                                        const el = document.getElementById('serialFirmware');
+                                        if (row && el) { row.style.display = ''; el.textContent = fw || el.textContent || ''; }
+                                        firmwareCaptureActive = false;
+                                        firmwareCandidate = '';
+                                    } else if (trimmed && trimmed !== '/f') {
+                                        firmwareCandidate = trimmed;
+                                        const row = document.getElementById('serialFirmwareRow');
+                                        const el = document.getElementById('serialFirmware');
+                                        if (row && el) { row.style.display = ''; el.textContent = firmwareCandidate; }
+                                    }
+                                }
+                                if (trimmed.length) lastLine = trimmed;
+                            }
+                        }
+                    }
+                } catch { }
+            }
+
+            // Hook Speak button
+            document.getElementById('speakBtn')?.addEventListener('click', async () => {
+                const input = document.getElementById('speakText');
+                const value = input ? String(input.value || '').trim() : '';
+                if (value) await sendSerialLine(value);
+            });
+
+            // Hook Update button: concatenate matrix texts with '@' and send
+            document.getElementById('matrixUpdateBtn')?.addEventListener('click', async () => {
+                const inputs = Array.from(document.querySelectorAll('#matrixGrid input[type="text"]'));
+                const parts = inputs
+                    .map(el => (el && typeof el.value === 'string') ? el.value.trim() : '')
+                    .filter(v => v.length > 0);
+                const payload = parts.length ? ('@' + parts.join('@')) : '';
+                if (payload.length > 0) await sendSerialLine(payload);
+            });
+
+            // UI buttons
+            document.getElementById('serialRefreshBtn')?.addEventListener('click', async () => {
+                if (!supportsSerial) return;
+                await listRememberedPorts();
+            });
+            document.getElementById('serialConnectBtn')?.addEventListener('click', async () => {
+                if (!supportsSerial) return;
+                if (serialPort && serialPort.readable && serialPort.writable) {
+                    await disconnectSerial();
+                } else {
+                    await requestAndConnect();
+                }
+            });
+
+            if (supportsSerial) {
+                listRememberedPorts();
+                navigator.serial.addEventListener?.('connect', listRememberedPorts);
+                navigator.serial.addEventListener?.('disconnect', listRememberedPorts);
+            } else {
+                const text = document.getElementById('serialStatusText');
+                if (text) text.textContent = 'Web Serial not supported';
+            }
+            updateSerialUi();
+        })();
+    </script>
+    <script>
+        // Web MIDI: outputs, connect, refresh, and send notes on pad press
+        (function () {
+            let midiAccess = null;
+            let midiOutput = null;
+
+            function populateOutputs() {
+                const sel = document.getElementById('midiOutputSelect');
+                if (!sel || !midiAccess) return;
+                const current = sel.value;
+                sel.innerHTML = '<option value="">— Not connected —</option>';
+                midiAccess.outputs.forEach(output => {
+                    const opt = document.createElement('option');
+                    opt.value = output.id;
+                    opt.textContent = output.name || `Output ${output.id}`;
+                    sel.appendChild(opt);
+                });
+                if (current) sel.value = current;
+            }
+
+            function setOutputById(id) {
+                midiOutput = null;
+                if (!midiAccess || !id) return;
+                const out = midiAccess.outputs.get(id);
+                if (out) midiOutput = out;
+                updateMidiUi();
+            }
+
+            function sendNoteOn(note, velocity = 100, channel = 0) {
+                if (!midiOutput) return;
+                const status = 0x90 | (channel & 0x0f);
+                midiOutput.send([status, note & 0x7f, velocity & 0x7f]);
+            }
+
+            function sendNoteOff(note, velocity = 64, channel = 0) {
+                if (!midiOutput) return;
+                const status = 0x80 | (channel & 0x0f);
+                midiOutput.send([status, note & 0x7f, velocity & 0x7f]);
+            }
+
+            // Request MIDI access
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess({ sysex: false }).then(access => {
+                    midiAccess = access;
+                    populateOutputs();
+                    midiAccess.onstatechange = populateOutputs;
+                }).catch(() => {
+                    // ignore failure for now
+                });
+            }
+
+            // UI handlers
+            document.getElementById('midiRefreshBtn')?.addEventListener('click', populateOutputs);
+            document.getElementById('midiConnectBtn')?.addEventListener('click', () => {
+                const sel = document.getElementById('midiOutputSelect');
+                const had = Boolean(midiOutput);
+                if (had) { midiOutput = null; } else { setOutputById(sel ? sel.value : ''); }
+                updateMidiUi();
+            });
+            document.getElementById('midiOutputSelect')?.addEventListener('change', (e) => {
+                const id = e.target.value;
+                setOutputById(id);
+            });
+
+            function updateMidiUi() {
+                const btn = document.getElementById('midiConnectBtn');
+                const text = document.getElementById('midiStatusText');
+                const badge = document.getElementById('midiStatusBadge');
+                const outSel = document.getElementById('midiOutputSelect');
+                const connected = Boolean(midiOutput);
+                if (btn) btn.textContent = connected ? 'Disconnect' : 'Connect';
+                if (text) text.textContent = connected ? (midiOutput?.name || 'Connected') : 'Not connected';
+                if (badge) {
+                    badge.textContent = connected ? 'ON' : 'OFF';
+                    badge.classList.toggle('connected', connected);
+                }
+                if (outSel && connected) outSel.value = midiOutput.id || outSel.value;
+            }
+            updateMidiUi();
+
+            // Hook MIDI pads to send notes 36..47
+            document.addEventListener('DOMContentLoaded', function () {
+                const START = 36;
+                // Temporarily set a light fill so pad centers appear prefilled
+                let prevFill = null;
+                try { prevFill = Nexus.colors.fill; Nexus.colors.fill = 'rgba(180,190,205,0.35)'; } catch (e) { }
+                for (let n = START; n < START + 12; n++) {
+                    const id = `pad_${n}`;
+                    const node = document.getElementById(id);
+                    if (!node) continue;
+                    try {
+                        // Initialize as button if not yet
+                        if (!node.querySelector('canvas')) {
+                            const btn = new Nexus.Button(`#${id}`, { size: [36, 36], mode: 'button' });
+                            btn.on('change', (v) => { if (v) window.sendMidiNote?.(n); });
+                        }
+                        // If already present, attempt to attach handler via nx.widgets registry if available
+                    } catch (e) { /* ignore */ }
+                }
+                // Restore previous fill for other widgets
+                try { if (prevFill !== null) Nexus.colors.fill = prevFill; } catch (e) { }
+            });
+
+            // Delegate change events from Nexus buttons to MIDI send
+            document.addEventListener('change', (evt) => {
+                const target = evt.target;
+                if (!(target && target.id && target.id.startsWith('pad_'))) return;
+                const note = parseInt(target.id.split('_')[1], 10);
+                if (Number.isInteger(note)) {
+                    // Send short note on and off
+                    sendNoteOn(note, 100, 0);
+                    setTimeout(() => sendNoteOff(note, 64, 0), 120);
+                }
+            }, true);
+
+            // Global helper and custom event to send notes from other scripts
+            window.sendMidiNote = function (note, velocity = 100, channel = 0, durationMs = 120) {
+                sendNoteOn(note, velocity, channel);
+                setTimeout(() => sendNoteOff(note, 64, channel), durationMs);
+            };
+            document.addEventListener('nx-pad-press', (e) => {
+                const note = e?.detail?.note;
+                if (typeof note === 'number') window.sendMidiNote(note);
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            const voices = ["Perfect Paul", "Vader", "Big Bob", "Precise Pete", "Ricochet Randy", "Biff", "Skip", "Robo Robert", "Goliath", "Alvin", "Gretchen"];
+            const legend = document.getElementById('voiceLegendSide');
+            if (legend) {
+                legend.style.setProperty('--voice-count', String(voices.length));
+                legend.innerHTML = voices.map(v => `<span>${v}</span>`).join('');
+            }
+        })();
+    </script>
+    <script>
+        // Buttons now live inside the matrix table as pad_36..pad_47
+    </script>
+</body>
+
+</html>
