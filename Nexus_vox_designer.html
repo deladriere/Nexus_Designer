@@ -932,7 +932,12 @@
 
                         <div class="span-12 tight-after-more">
                             <div class="field">
-                                <div class="btn-row">
+                                <div class="btn-row end">
+                                    <div class="tooltip">
+                                        <button id="randomBtn" class="btn primary" type="button">Random</button>
+                                        <span class="tooltiptext">Randomizes all voice parameters and applies them to
+                                            the device.</span>
+                                    </div>
                                     <div class="tooltip">
                                         <button id="resetBtn" class="btn secondary" type="button">Reset</button>
                                         <span class="tooltiptext">Resets all voice parameters to their default
@@ -1220,6 +1225,7 @@
                     window.voiceRadio = radio;
                     // Send serial command on selection: /v{index} + CRLF
                     radio.on('change', function (value) {
+                        if (window.randomizing) return; // Skip if we're randomizing
                         let idx = (typeof value === 'number') ? value : (value && (value.index ?? value.value));
                         idx = (idx == null) ? 0 : (idx | 0);
                         if (typeof window.sendSerialLine === 'function') {
@@ -1289,36 +1295,42 @@
             // Direct dial commands with debouncing
             try {
                 speedDial && speedDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     speedDebounce = sendDialCommand('s', val, speedDebounce);
                 });
             } catch { }
             try {
                 reverbDial && reverbDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     reverbDebounce = sendDialCommand('r', val, reverbDebounce);
                 });
             } catch { }
             try {
                 formantDial && formantDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     formantDebounce = sendDialCommand('t', val, formantDebounce);
                 });
             } catch { }
             try {
                 pitchDial && pitchDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     pitchDebounce = sendDialCommand('p', val, pitchDebounce);
                 });
             } catch { }
             try {
                 expressionDial && expressionDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     expressionDebounce = sendDialCommand('e', val, expressionDebounce);
                 });
             } catch { }
             try {
                 volumeDial && volumeDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     volumeDebounce = sendDialCommand('u', val, volumeDebounce);
                 });
@@ -1418,7 +1430,19 @@
                 }
 
                 // Send the command to device
-                if (window.sendSerialLine && p.cmd) await window.sendSerialLine('/d ' + p.cmd);
+                if (window.sendSerialLine && p.cmd) {
+                    // Parse and send individual dial commands
+                    const parts = p.cmd.split(' ');
+                    for (const part of parts) {
+                        if (part.length >= 2) {
+                            const value = parseInt(part.slice(0, -1));
+                            const command = part.slice(-1);
+                            if (!isNaN(value)) {
+                                await window.sendSerialLine(`/${command}${value}`);
+                            }
+                        }
+                    }
+                }
                 try { notify(`Loaded preset "${(p.name || 'Preset')}"`, 'success'); } catch { }
             }
 
@@ -1601,20 +1625,152 @@
                 // Set voice radio to Perfect Paul (index 0)
                 try {
                     if (window.voiceRadio) {
-                        console.log('Setting voice radio to 0, current value:', window.voiceRadio.value);
-                        window.voiceRadio.value = 0;
-                        console.log('Voice radio value after setting:', window.voiceRadio.value);
+                        console.log('Resetting voice radio to 0, current active:', window.voiceRadio.active);
+                        // Use select method if available, fallback to active property
+                        if (window.voiceRadio.select) {
+                            window.voiceRadio.select(0);
+                        } else {
+                            window.voiceRadio.active = 0;
+                        }
+                        console.log('Voice radio active after reset:', window.voiceRadio.active);
                     } else {
                         console.log('Voice radio not found, trying to access via DOM');
                         const voiceRadioEl = document.querySelector('#voiceRadio');
                         if (voiceRadioEl && voiceRadioEl.nexus) {
-                            console.log('Found voice radio via DOM, setting to 0');
-                            voiceRadioEl.nexus.value = 0;
+                            console.log('Found voice radio via DOM, resetting to 0');
+                            if (voiceRadioEl.nexus.select) {
+                                voiceRadioEl.nexus.select(0);
+                            } else {
+                                voiceRadioEl.nexus.active = 0;
+                            }
                         }
                     }
                 } catch (e) {
                     console.log('Error setting voice radio:', e);
                 }
+            });
+
+            // Random button: randomize all voice parameters
+            document.getElementById('randomBtn')?.addEventListener('click', async () => {
+                // Set flag to prevent dial change events from sending commands
+                window.randomizing = true;
+
+                // Randomize voice selection (0-10)
+                const randomVoice = Math.floor(Math.random() * 11);
+                console.log('Random button clicked, random voice:', randomVoice);
+
+                // Randomize dial values
+                const randomSpeed = Math.floor(Math.random() * 14); // 0-13
+                const randomReverb = Math.floor(Math.random() * 10); // 0-9
+                const randomFormant = Math.floor(Math.random() * 100); // 0-99
+                const randomPitch = Math.floor(Math.random() * 100); // 0-99
+                const randomExpression = Math.floor(Math.random() * 10); // 0-9
+                const randomVolume = Math.floor(Math.random() * 10); // 0-9
+
+                // Send voice command FIRST (speech synth needs voice before other params)
+                if (typeof window.sendSerialLine === 'function') {
+                    await window.sendSerialLine(`/v${randomVoice}`);
+                }
+
+                // Then send dial commands
+                if (typeof window.sendSerialLine === 'function') {
+                    await window.sendSerialLine(`/s${randomSpeed}`);
+                    await window.sendSerialLine(`/r${randomReverb}`);
+                    await window.sendSerialLine(`/t${randomFormant}`);
+                    await window.sendSerialLine(`/p${randomPitch}`);
+                    await window.sendSerialLine(`/e${randomExpression}`);
+                    await window.sendSerialLine(`/u${randomVolume}`);
+                }
+
+                // Update UI dials silently (without triggering change events)
+                try {
+                    if (speedDial) {
+                        speedDial.value = randomSpeed;
+                        speedDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (reverbDial) {
+                        reverbDial.value = randomReverb;
+                        reverbDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (formantDial) {
+                        formantDial.value = randomFormant;
+                        formantDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (pitchDial) {
+                        pitchDial.value = randomPitch;
+                        pitchDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (expressionDial) {
+                        expressionDial.value = randomExpression;
+                        expressionDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (volumeDial) {
+                        volumeDial.value = randomVolume;
+                        volumeDial.trigger = false;
+                    }
+                } catch { }
+
+                // Update voice radio (disable change events to prevent duplicate commands)
+                try {
+                    if (window.voiceRadio) {
+                        console.log('Selecting voice radio button:', randomVoice, 'current active:', window.voiceRadio.active);
+                        // Temporarily disable change events
+                        window.voiceRadio.trigger = false;
+                        // Try using select method if available
+                        if (window.voiceRadio.select) {
+                            window.voiceRadio.select(randomVoice);
+                        } else {
+                            // Fallback to setting active property
+                            window.voiceRadio.active = randomVoice;
+                        }
+                        console.log('Voice radio active after setting:', window.voiceRadio.active);
+                    } else {
+                        console.log('Voice radio not found, trying DOM access');
+                        const voiceRadioEl = document.querySelector('#voiceRadio');
+                        if (voiceRadioEl && voiceRadioEl.nexus) {
+                            console.log('Found voice radio via DOM, selecting button:', randomVoice);
+                            voiceRadioEl.nexus.trigger = false;
+                            if (voiceRadioEl.nexus.select) {
+                                voiceRadioEl.nexus.select(randomVoice);
+                            } else {
+                                voiceRadioEl.nexus.active = randomVoice;
+                            }
+                        } else {
+                            console.log('Voice radio not found in DOM either');
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error setting voice radio:', e);
+                }
+
+                // Re-enable change events
+                setTimeout(() => {
+                    try { if (speedDial) speedDial.trigger = true; } catch { }
+                    try { if (reverbDial) reverbDial.trigger = true; } catch { }
+                    try { if (formantDial) formantDial.trigger = true; } catch { }
+                    try { if (pitchDial) pitchDial.trigger = true; } catch { }
+                    try { if (expressionDial) expressionDial.trigger = true; } catch { }
+                    try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                    try { if (window.voiceRadio) window.voiceRadio.trigger = true; } catch { }
+                    try {
+                        const voiceRadioEl = document.querySelector('#voiceRadio');
+                        if (voiceRadioEl && voiceRadioEl.nexus) {
+                            voiceRadioEl.nexus.trigger = true;
+                        }
+                    } catch { }
+                    // Clear the randomizing flag
+                    window.randomizing = false;
+                }, 100);
             });
             // Matrix row buttons
             try {
