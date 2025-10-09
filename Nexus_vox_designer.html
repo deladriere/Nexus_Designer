@@ -323,17 +323,19 @@
 
         /* NexusUI theming hooks */
         #voiceRadio canvas,
-        #avgPitchDial canvas,
-        #pitchRateDial canvas,
-        #breathinessDial canvas {
+        #speedDial canvas,
+        #reverbDial canvas,
+        #formantDial canvas,
+        #pitchDial canvas,
+        #expressionDial canvas,
+        #volumeDial canvas {
             border-radius: 10px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             background: rgba(255, 255, 255, 0.06);
         }
 
-        .btn-row input#speakText,
-        .btn-row input#designedCommand {
+        .btn-row input#speakText {
             flex: 1;
             min-width: 220px;
         }
@@ -425,6 +427,10 @@
 
         .voice-legend span {
             white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
         }
 
         #voiceRadio {
@@ -864,94 +870,69 @@
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Average pitch <span class="range">50–500</span></label>
-                                        <span class="tooltiptext">Controls the base pitch of the voice. Higher values
-                                            make
-                                            the voice sound higher-pitched.</span>
+                                        <label>Speed <span class="range">0–13</span></label>
+                                        <span class="tooltiptext">Controls the speech rate. Higher values make the voice
+                                            speak faster.</span>
                                     </div>
-                                    <div id="avgPitchDial"></div>
+                                    <div id="speedDial"></div>
                                 </div>
                             </div>
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Pitch range <span class="range">0–100</span></label>
-                                        <span class="tooltiptext">Controls how much the pitch can vary during speech.
-                                            Higher
-                                            values allow more pitch variation.</span>
+                                        <label>Reverb <span class="range">0–9</span></label>
+                                        <span class="tooltiptext">Adds reverb effect to the voice. Higher values create
+                                            more echo.</span>
                                     </div>
-                                    <div id="pitchRateDial"></div>
+                                    <div id="reverbDial"></div>
                                 </div>
                             </div>
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Breathiness <span class="range">0–70</span></label>
-                                        <span class="tooltiptext">Adds breathy quality to the voice. Higher values make
-                                            the
-                                            voice sound more airy and whispery.</span>
+                                        <label>Formant <span class="range">0–99</span></label>
+                                        <span class="tooltiptext">Controls the formant frequency. Affects the vocal
+                                            tract characteristics.</span>
                                     </div>
-                                    <div id="breathinessDial"></div>
+                                    <div id="formantDial"></div>
                                 </div>
                             </div>
 
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Head size <span class="range">65–135</span></label>
-                                        <span class="tooltiptext">Simulates different head sizes affecting voice
-                                            resonance.
-                                            Lower values sound more child-like.</span>
+                                        <label>Pitch <span class="range">0–99</span></label>
+                                        <span class="tooltiptext">Controls the base pitch of the voice. Higher values
+                                            make the voice sound higher-pitched.</span>
                                     </div>
-                                    <div id="headSizeDial"></div>
+                                    <div id="pitchDial"></div>
                                 </div>
                             </div>
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Laryngealization <span class="range">0–100</span></label>
-                                        <span class="tooltiptext">Adds creaky or rough quality to the voice. Higher
-                                            values
-                                            create a more gravelly sound.</span>
+                                        <label>Expression <span class="range">0–9</span></label>
+                                        <span class="tooltiptext">Controls the expressiveness of the voice. Higher
+                                            values add more emotion and variation.</span>
                                     </div>
-                                    <div id="laryngealizationDial"></div>
+                                    <div id="expressionDial"></div>
                                 </div>
                             </div>
                             <div class="span-3">
                                 <div class="field">
                                     <div class="tooltip">
-                                        <label>Gain <span class="range">0–100</span></label>
+                                        <label>Volume <span class="range">0–9</span></label>
                                         <span class="tooltiptext">Controls the overall volume/amplitude of the voice
                                             output.</span>
                                     </div>
-                                    <div id="gainDial"></div>
+                                    <div id="volumeDial"></div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="span-12 tight-after-more">
-                            <div class="field compact-field">
-                                <h2 class="card-title">Command voice design</h2>
                             </div>
                         </div>
 
                         <div class="span-12 tight-after-more">
                             <div class="field">
-                                <label>Designed voice command (editable)</label>
                                 <div class="btn-row">
-                                    <div class="tooltip">
-                                        <input id="designedCommand" type="text"
-                                            placeholder="Command will appear here" />
-                                        <span class="tooltiptext">This field auto-updates when you adjust the dials
-                                            above,
-                                            but you can also edit it manually. Use Apply to send the command or Reset to
-                                            restore defaults.</span>
-                                    </div>
-                                    <div class="tooltip">
-                                        <button id="applyDesignedBtn" class="btn primary" type="button">Apply</button>
-                                        <span class="tooltiptext">Sends the current command text to the device
-                                            immediately.</span>
-                                    </div>
                                     <div class="tooltip">
                                         <button id="resetBtn" class="btn secondary" type="button">Reset</button>
                                         <span class="tooltiptext">Resets all voice parameters to their default
@@ -1235,6 +1216,8 @@
                         numberOfButtons: voices.length,
                         active: 0
                     });
+                    // Store globally for reset function access
+                    window.voiceRadio = radio;
                     // Send serial command on selection: /v{index} + CRLF
                     radio.on('change', function (value) {
                         let idx = (typeof value === 'number') ? value : (value && (value.index ?? value.value));
@@ -1245,7 +1228,14 @@
                     });
                     if (legendEl) {
                         legendEl.style.width = width + 'px';
-                        legendEl.innerHTML = voices.map(v => `<span>${v}</span>`).join('');
+                        legendEl.innerHTML = voices.map(v => {
+                            const words = v.split(' ');
+                            if (words.length > 1) {
+                                return `<span>${words[0]}<br>${words.slice(1).join(' ')}</span>`;
+                            } else {
+                                return `<span>${v}</span>`;
+                            }
+                        }).join('');
                     }
                 } catch (e) {
                     // Ignore if Nexus isn't loaded
@@ -1271,66 +1261,68 @@
                 }
             }
 
-            let designedCommandSendDebounce = null;
-            let designedManualOverride = false;
-            const avgPitchDial = makeDial('#avgPitchDial', 50, 500, 112);
-            const pitchRateDial = makeDial('#pitchRateDial', 0, 100, 100);
-            const breathinessDial = makeDial('#breathinessDial', 0, 70, 0);
-            const headSizeDial = makeDial('#headSizeDial', 65, 135, 100);
-            const laryngealizationDial = makeDial('#laryngealizationDial', 0, 100, 0);
-            const gainDial = makeDial('#gainDial', 0, 100, 100);
+            // Debounce timers for each dial
+            let speedDebounce = null;
+            let reverbDebounce = null;
+            let formantDebounce = null;
+            let pitchDebounce = null;
+            let expressionDebounce = null;
+            let volumeDebounce = null;
 
-            let designedInputEditing = false;
-            function updateDesignedCommand() {
-                if (designedManualOverride) return;
-                const parts = [];
-                try { if (avgPitchDial) parts.push('ap ' + Math.round(Number(avgPitchDial.value || 0))); } catch { }
-                try { if (pitchRateDial) parts.push('pr ' + Math.round(Number(pitchRateDial.value || 0))); } catch { }
-                try { if (breathinessDial) parts.push('br ' + Math.round(Number(breathinessDial.value || 0))); } catch { }
-                try { if (headSizeDial) parts.push('hs ' + Math.round(Number(headSizeDial.value || 0))); } catch { }
-                try { if (laryngealizationDial) parts.push('la ' + Math.round(Number(laryngealizationDial.value || 0))); } catch { }
-                try { if (gainDial) parts.push('g5 ' + Math.round(Number(gainDial.value || 0))); } catch { }
-                const input = document.getElementById('designedCommand');
-                const cmdString = parts.join(' ');
-                if (input && !designedInputEditing) input.value = cmdString;
-                // Debounced send of designed command: /d <string>
-                try {
-                    if (designedInputEditing) return; // don't auto-send while user is editing
-                    clearTimeout(designedCommandSendDebounce);
-                    designedCommandSendDebounce = setTimeout(() => {
-                        if (typeof window.sendSerialLine === 'function' && cmdString) {
-                            window.sendSerialLine('/d ' + cmdString);
-                        }
-                    }, 250);
-                } catch { }
+            const speedDial = makeDial('#speedDial', 0, 13, 6);
+            const reverbDial = makeDial('#reverbDial', 0, 9, 0);
+            const formantDial = makeDial('#formantDial', 0, 99, 50);
+            const pitchDial = makeDial('#pitchDial', 0, 99, 50);
+            const expressionDial = makeDial('#expressionDial', 0, 9, 5);
+            const volumeDial = makeDial('#volumeDial', 0, 9, 5);
+
+            // Function to send command with debouncing
+            function sendDialCommand(command, value, debounceTimer) {
+                clearTimeout(debounceTimer);
+                return setTimeout(() => {
+                    if (typeof window.sendSerialLine === 'function') {
+                        window.sendSerialLine(`/${command}${value}`);
+                    }
+                }, 250);
             }
 
-            // Pause auto-update while editing designed command; resume on blur
-            (function attachDesignedInputHandlers() {
-                const input = document.getElementById('designedCommand');
-                if (!input) return;
-                input.addEventListener('focus', () => { designedInputEditing = true; });
-                input.addEventListener('blur', () => { designedInputEditing = false; /* keep manual text until dial moves */ });
-                document.getElementById('applyDesignedBtn')?.addEventListener('click', async () => {
-                    const text = (input.value || '').trim().replace(/\s+/g, ' ');
-                    if (!text) return;
-                    designedManualOverride = true;
-                    if (typeof window.sendSerialLine === 'function') {
-                        await window.sendSerialLine('/d ' + text);
-                    }
+            // Direct dial commands with debouncing
+            try {
+                speedDial && speedDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    speedDebounce = sendDialCommand('s', val, speedDebounce);
                 });
-            })();
-
-            // Update command on dial changes
-            try { avgPitchDial && avgPitchDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-            try { pitchRateDial && pitchRateDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-            try { breathinessDial && breathinessDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-            try { headSizeDial && headSizeDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-            try { laryngealizationDial && laryngealizationDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-            try { gainDial && gainDial.on('change', () => { designedManualOverride = false; updateDesignedCommand(); }); } catch { }
-
-            // Initialize with defaults
-            updateDesignedCommand();
+            } catch { }
+            try {
+                reverbDial && reverbDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    reverbDebounce = sendDialCommand('r', val, reverbDebounce);
+                });
+            } catch { }
+            try {
+                formantDial && formantDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    formantDebounce = sendDialCommand('t', val, formantDebounce);
+                });
+            } catch { }
+            try {
+                pitchDial && pitchDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    pitchDebounce = sendDialCommand('p', val, pitchDebounce);
+                });
+            } catch { }
+            try {
+                expressionDial && expressionDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    expressionDebounce = sendDialCommand('e', val, expressionDebounce);
+                });
+            } catch { }
+            try {
+                volumeDial && volumeDial.on('change', (value) => {
+                    const val = Math.round(Number(value || 0));
+                    volumeDebounce = sendDialCommand('u', val, volumeDebounce);
+                });
+            } catch { }
             // Lightweight notifications (toasts)
             function notify(message, level = 'info') {
                 try {
@@ -1380,8 +1372,15 @@
             }
             function makePresetId() { return 'p_' + Math.random().toString(36).slice(2, 10); }
             function currentCmdString() {
-                const input = document.getElementById('designedCommand');
-                return (input?.value || '').trim();
+                // Generate command string from current dial values
+                const parts = [];
+                try { if (speedDial) parts.push(Math.round(Number(speedDial.value || 0)) + 's'); } catch { }
+                try { if (reverbDial) parts.push(Math.round(Number(reverbDial.value || 0)) + 'r'); } catch { }
+                try { if (formantDial) parts.push(Math.round(Number(formantDial.value || 0)) + 'f'); } catch { }
+                try { if (pitchDial) parts.push(Math.round(Number(pitchDial.value || 0)) + 'p'); } catch { }
+                try { if (expressionDial) parts.push(Math.round(Number(expressionDial.value || 0)) + 'e'); } catch { }
+                try { if (volumeDial) parts.push(Math.round(Number(volumeDial.value || 0)) + 'v'); } catch { }
+                return parts.join(' ');
             }
             function refreshPresetList(selectedId) {
                 const sel = document.getElementById('presetList'); if (!sel) return;
@@ -1396,9 +1395,29 @@
                 const list = loadPresets();
                 const p = list.find(x => x.id === id);
                 if (!p) return;
-                // Apply designed command text and send
-                const input = document.getElementById('designedCommand'); if (input) input.value = p.cmd || '';
-                designedManualOverride = true; // lock until a dial moves
+
+                // Parse command and update dials
+                if (p.cmd) {
+                    const parts = p.cmd.split(' ');
+                    parts.forEach(part => {
+                        if (part.length >= 2) {
+                            const value = parseInt(part.slice(0, -1));
+                            const command = part.slice(-1);
+                            if (!isNaN(value)) {
+                                switch (command) {
+                                    case 's': try { if (speedDial) speedDial.value = value; } catch { } break;
+                                    case 'r': try { if (reverbDial) reverbDial.value = value; } catch { } break;
+                                    case 'f': try { if (formantDial) formantDial.value = value; } catch { } break;
+                                    case 'p': try { if (pitchDial) pitchDial.value = value; } catch { } break;
+                                    case 'e': try { if (expressionDial) expressionDial.value = value; } catch { } break;
+                                    case 'v': try { if (volumeDial) volumeDial.value = value; } catch { } break;
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Send the command to device
                 if (window.sendSerialLine && p.cmd) await window.sendSerialLine('/d ' + p.cmd);
                 try { notify(`Loaded preset "${(p.name || 'Preset')}"`, 'success'); } catch { }
             }
@@ -1525,15 +1544,77 @@
                 } catch { }
             });
             // Reset button: set default values
-            document.getElementById('resetBtn')?.addEventListener('click', () => {
-                try { if (avgPitchDial) avgPitchDial.value = 112; } catch { }
-                try { if (pitchRateDial) pitchRateDial.value = 100; } catch { }
-                try { if (breathinessDial) breathinessDial.value = 0; } catch { }
-                try { if (headSizeDial) headSizeDial.value = 100; } catch { }
-                try { if (laryngealizationDial) laryngealizationDial.value = 0; } catch { }
-                try { if (gainDial) gainDial.value = 100; } catch { }
-                designedManualOverride = false;
-                updateDesignedCommand();
+            document.getElementById('resetBtn')?.addEventListener('click', async () => {
+                // Send /o command first - this resets everything on the device
+                if (typeof window.sendSerialLine === 'function') {
+                    await window.sendSerialLine('/o');
+                }
+
+                // Update UI dials silently (without triggering change events)
+                try {
+                    if (speedDial) {
+                        speedDial.value = 6;
+                        speedDial.trigger = false; // Prevent change event
+                    }
+                } catch { }
+                try {
+                    if (reverbDial) {
+                        reverbDial.value = 0;
+                        reverbDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (formantDial) {
+                        formantDial.value = 50;
+                        formantDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (pitchDial) {
+                        pitchDial.value = 50;
+                        pitchDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (expressionDial) {
+                        expressionDial.value = 5;
+                        expressionDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (volumeDial) {
+                        volumeDial.value = 5;
+                        volumeDial.trigger = false;
+                    }
+                } catch { }
+
+                // Re-enable change events
+                setTimeout(() => {
+                    try { if (speedDial) speedDial.trigger = true; } catch { }
+                    try { if (reverbDial) reverbDial.trigger = true; } catch { }
+                    try { if (formantDial) formantDial.trigger = true; } catch { }
+                    try { if (pitchDial) pitchDial.trigger = true; } catch { }
+                    try { if (expressionDial) expressionDial.trigger = true; } catch { }
+                    try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                }, 100);
+
+                // Set voice radio to Perfect Paul (index 0)
+                try {
+                    if (window.voiceRadio) {
+                        console.log('Setting voice radio to 0, current value:', window.voiceRadio.value);
+                        window.voiceRadio.value = 0;
+                        console.log('Voice radio value after setting:', window.voiceRadio.value);
+                    } else {
+                        console.log('Voice radio not found, trying to access via DOM');
+                        const voiceRadioEl = document.querySelector('#voiceRadio');
+                        if (voiceRadioEl && voiceRadioEl.nexus) {
+                            console.log('Found voice radio via DOM, setting to 0');
+                            voiceRadioEl.nexus.value = 0;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error setting voice radio:', e);
+                }
             });
             // Matrix row buttons
             try {
@@ -2099,7 +2180,14 @@
             const legend = document.getElementById('voiceLegendSide');
             if (legend) {
                 legend.style.setProperty('--voice-count', String(voices.length));
-                legend.innerHTML = voices.map(v => `<span>${v}</span>`).join('');
+                legend.innerHTML = voices.map(v => {
+                    const words = v.split(' ');
+                    if (words.length > 1) {
+                        return `<span>${words[0]}<br>${words.slice(1).join(' ')}</span>`;
+                    } else {
+                        return `<span>${v}</span>`;
+                    }
+                }).join('');
             }
         })();
     </script>
