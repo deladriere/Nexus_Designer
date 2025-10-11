@@ -328,11 +328,23 @@
         #formantDial canvas,
         #pitchDial canvas,
         #expressionDial canvas,
-        #volumeDial canvas {
+        #volumeDial canvas,
+        #modeToggle canvas {
             border-radius: 10px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Mode toggle specific styling */
+        #modeToggle {
+            margin: 4px 0 0 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        #modeToggle canvas {
+            display: block;
         }
 
         .btn-row input#speakText {
@@ -954,6 +966,17 @@
                         </div>
 
                         <div class="span-12">
+                            <div class="field">
+                                <div class="tooltip">
+                                    <label>Normal - Phoneme</label>
+                                    <span class="tooltiptext">Toggle between Normal and Phoneme speech modes. Normal
+                                        sends /n command, Phoneme sends /d command.</span>
+                                </div>
+                                <div id="modeToggle"></div>
+                            </div>
+                        </div>
+
+                        <div class="span-12">
                             <div class="btn-row">
                                 <input id="speakText" type="text" placeholder="Type text to speak"
                                     aria-label="Speak text" />
@@ -1250,6 +1273,47 @@
             renderVoiceRadio();
             window.addEventListener('resize', renderVoiceRadio);
 
+            // Mode toggle (Normal/Phoneme) - NexusUI Toggle
+            let modeToggle = null;
+            try {
+                const toggleElement = document.getElementById('modeToggle');
+                if (toggleElement) {
+                    console.log('Initializing NexusUI mode toggle...');
+
+                    // Create NexusUI Toggle
+                    modeToggle = new Nexus.Toggle('#modeToggle', {
+                        size: [40, 20],
+                        state: false // false = Normal, true = Phoneme
+                    });
+
+                    // Colorize the toggle - grey track, accent color for active state
+                    modeToggle.colorize("accent", "#ff6b9d"); // Pink accent for active state
+                    modeToggle.colorize("fill", "#CBCBCB"); // Light grey for the track
+
+                    console.log('Mode toggle created:', modeToggle);
+
+                    // Handle toggle changes
+                    modeToggle.on('change', function (value) {
+                        if (window.randomizing) return; // Skip if we're randomizing
+                        if (typeof window.sendSerialLine === 'function') {
+                            if (value) {
+                                // Phoneme mode - send /d command
+                                window.sendSerialLine('/d');
+                            } else {
+                                // Normal mode - send /n command
+                                window.sendSerialLine('/n');
+                            }
+                        }
+                    });
+
+                    console.log('Mode toggle initialized successfully');
+                } else {
+                    console.error('Toggle element not found!');
+                }
+            } catch (e) {
+                console.error('Failed to initialize mode toggle:', e);
+            }
+
             // Dials (NexusUI)
             function makeDial(selector, min, max, value) {
                 try {
@@ -1281,6 +1345,7 @@
             const pitchDial = makeDial('#pitchDial', 0, 99, 50);
             const expressionDial = makeDial('#expressionDial', 0, 9, 5);
             const volumeDial = makeDial('#volumeDial', 0, 9, 5);
+
 
             // Function to send command with debouncing
             function sendDialCommand(command, value, debounceTimer) {
