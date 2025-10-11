@@ -2323,6 +2323,15 @@
                 if (value) await sendSerialLine(value);
             });
 
+            // Hook Enter key on text input to trigger Speak
+            document.getElementById('speakText')?.addEventListener('keydown', async (event) => {
+                if (event.key === 'Enter') {
+                    const input = document.getElementById('speakText');
+                    const value = input ? String(input.value || '').trim() : '';
+                    if (value) await sendSerialLine(value);
+                }
+            });
+
             // Hook Update button: concatenate matrix texts with '@' and send
             document.getElementById('matrixUpdateBtn')?.addEventListener('click', async () => {
                 const inputs = Array.from(document.querySelectorAll('#matrixGrid input[type="text"]'));
