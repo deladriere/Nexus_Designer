@@ -1384,14 +1384,22 @@
             }
             function makePresetId() { return 'p_' + Math.random().toString(36).slice(2, 10); }
             function currentCmdString() {
-                // Generate command string from current dial values
+                // Generate command string from current voice and dial values
                 const parts = [];
+                // Add voice first
+                try {
+                    if (window.voiceRadio) {
+                        const voiceIdx = window.voiceRadio.active || 0;
+                        parts.push(voiceIdx + 'v');
+                    }
+                } catch { }
+                // Add dial values
                 try { if (speedDial) parts.push(Math.round(Number(speedDial.value || 0)) + 's'); } catch { }
                 try { if (reverbDial) parts.push(Math.round(Number(reverbDial.value || 0)) + 'r'); } catch { }
-                try { if (formantDial) parts.push(Math.round(Number(formantDial.value || 0)) + 'f'); } catch { }
+                try { if (formantDial) parts.push(Math.round(Number(formantDial.value || 0)) + 't'); } catch { }
                 try { if (pitchDial) parts.push(Math.round(Number(pitchDial.value || 0)) + 'p'); } catch { }
                 try { if (expressionDial) parts.push(Math.round(Number(expressionDial.value || 0)) + 'e'); } catch { }
-                try { if (volumeDial) parts.push(Math.round(Number(volumeDial.value || 0)) + 'v'); } catch { }
+                try { if (volumeDial) parts.push(Math.round(Number(volumeDial.value || 0)) + 'u'); } catch { }
                 return parts.join(' ');
             }
             function refreshPresetList(selectedId) {
@@ -1408,41 +1416,105 @@
                 const p = list.find(x => x.id === id);
                 if (!p) return;
 
-                // Parse command and update dials
+                // Set flag to prevent change events from sending commands
+                window.randomizing = true;
+
+                // Parse command and update UI
                 if (p.cmd) {
                     const parts = p.cmd.split(' ');
+                    let voiceValue = null;
+                    const dialCommands = [];
+
+                    // Separate voice command from dial commands
                     parts.forEach(part => {
                         if (part.length >= 2) {
                             const value = parseInt(part.slice(0, -1));
                             const command = part.slice(-1);
                             if (!isNaN(value)) {
-                                switch (command) {
-                                    case 's': try { if (speedDial) speedDial.value = value; } catch { } break;
-                                    case 'r': try { if (reverbDial) reverbDial.value = value; } catch { } break;
-                                    case 'f': try { if (formantDial) formantDial.value = value; } catch { } break;
-                                    case 'p': try { if (pitchDial) pitchDial.value = value; } catch { } break;
-                                    case 'e': try { if (expressionDial) expressionDial.value = value; } catch { } break;
-                                    case 'v': try { if (volumeDial) volumeDial.value = value; } catch { } break;
+                                if (command === 'v') {
+                                    voiceValue = value;
+                                } else {
+                                    dialCommands.push({ command, value });
                                 }
                             }
                         }
                     });
+
+                    // Update voice radio first
+                    if (voiceValue !== null) {
+                        try {
+                            if (window.voiceRadio) {
+                                window.voiceRadio.trigger = false;
+                                if (window.voiceRadio.select) {
+                                    window.voiceRadio.select(voiceValue);
+                                } else {
+                                    window.voiceRadio.active = voiceValue;
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Error setting voice radio:', e);
+                        }
+                    }
+
+                    // Update dials silently
+                    dialCommands.forEach(({ command, value }) => {
+                        try {
+                            switch (command) {
+                                case 's': if (speedDial) { speedDial.value = value; speedDial.trigger = false; } break;
+                                case 'r': if (reverbDial) { reverbDial.value = value; reverbDial.trigger = false; } break;
+                                case 't': if (formantDial) { formantDial.value = value; formantDial.trigger = false; } break;
+                                case 'p': if (pitchDial) { pitchDial.value = value; pitchDial.trigger = false; } break;
+                                case 'e': if (expressionDial) { expressionDial.value = value; expressionDial.trigger = false; } break;
+                                case 'u': if (volumeDial) { volumeDial.value = value; volumeDial.trigger = false; } break;
+                            }
+                        } catch (e) { }
+                    });
                 }
 
-                // Send the command to device
+                // Send commands to device in correct order: voice first, then dials
                 if (window.sendSerialLine && p.cmd) {
-                    // Parse and send individual dial commands
                     const parts = p.cmd.split(' ');
-                    for (const part of parts) {
+                    let voiceValue = null;
+                    const dialCommands = [];
+
+                    // Separate voice command from dial commands
+                    parts.forEach(part => {
                         if (part.length >= 2) {
                             const value = parseInt(part.slice(0, -1));
                             const command = part.slice(-1);
                             if (!isNaN(value)) {
-                                await window.sendSerialLine(`/${command}${value}`);
+                                if (command === 'v') {
+                                    voiceValue = value;
+                                } else {
+                                    dialCommands.push({ command, value });
+                                }
                             }
                         }
+                    });
+
+                    // Send voice command first
+                    if (voiceValue !== null) {
+                        await window.sendSerialLine(`/v${voiceValue}`);
+                    }
+
+                    // Then send dial commands
+                    for (const { command, value } of dialCommands) {
+                        await window.sendSerialLine(`/${command}${value}`);
                     }
                 }
+
+                // Re-enable change events
+                setTimeout(() => {
+                    try { if (speedDial) speedDial.trigger = true; } catch { }
+                    try { if (reverbDial) reverbDial.trigger = true; } catch { }
+                    try { if (formantDial) formantDial.trigger = true; } catch { }
+                    try { if (pitchDial) pitchDial.trigger = true; } catch { }
+                    try { if (expressionDial) expressionDial.trigger = true; } catch { }
+                    try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                    try { if (window.voiceRadio) window.voiceRadio.trigger = true; } catch { }
+                    window.randomizing = false;
+                }, 100);
+
                 try { notify(`Loaded preset "${(p.name || 'Preset')}"`, 'success'); } catch { }
             }
 
@@ -1861,6 +1933,23 @@
 
             // Initialize tooltip toggle
             initTooltipToggle();
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Only trigger if not typing in an input field
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                // Press 'r' to trigger random button
+                if (e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    const randomBtn = document.getElementById('randomBtn');
+                    if (randomBtn) {
+                        randomBtn.click();
+                    }
+                }
+            });
 
             // Remove JS positioning; rely on CSS-only for stable placement above labels
         });
