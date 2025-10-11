@@ -329,6 +329,7 @@
         #pitchDial canvas,
         #expressionDial canvas,
         #volumeDial canvas,
+        #articulateDial canvas,
         #modeToggle canvas {
             border-radius: 10px;
             border: 1px solid var(--border);
@@ -940,6 +941,16 @@
                                     <div id="volumeDial"></div>
                                 </div>
                             </div>
+                            <div class="span-3">
+                                <div class="field">
+                                    <div class="tooltip">
+                                        <label>Articulate <span class="range">0–9</span></label>
+                                        <span class="tooltiptext">Controls the articulation clarity of the voice. Higher
+                                            values make speech more distinct and clear.</span>
+                                    </div>
+                                    <div id="articulateDial"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="span-12 tight-after-more">
@@ -1338,6 +1349,7 @@
             let pitchDebounce = null;
             let expressionDebounce = null;
             let volumeDebounce = null;
+            let articulateDebounce = null;
 
             const speedDial = makeDial('#speedDial', 0, 13, 6);
             const reverbDial = makeDial('#reverbDial', 0, 9, 0);
@@ -1345,6 +1357,7 @@
             const pitchDial = makeDial('#pitchDial', 0, 99, 50);
             const expressionDial = makeDial('#expressionDial', 0, 9, 5);
             const volumeDial = makeDial('#volumeDial', 0, 9, 5);
+            const articulateDial = makeDial('#articulateDial', 0, 9, 5);
 
 
             // Function to send command with debouncing
@@ -1398,6 +1411,13 @@
                     if (window.randomizing) return; // Skip if we're randomizing
                     const val = Math.round(Number(value || 0));
                     volumeDebounce = sendDialCommand('u', val, volumeDebounce);
+                });
+            } catch { }
+            try {
+                articulateDial && articulateDial.on('change', (value) => {
+                    if (window.randomizing) return; // Skip if we're randomizing
+                    const val = Math.round(Number(value || 0));
+                    articulateDebounce = sendDialCommand('q', val, articulateDebounce);
                 });
             } catch { }
             // Lightweight notifications (toasts)
@@ -1465,6 +1485,7 @@
                 try { if (pitchDial) parts.push(Math.round(Number(pitchDial.value || 0)) + 'p'); } catch { }
                 try { if (expressionDial) parts.push(Math.round(Number(expressionDial.value || 0)) + 'e'); } catch { }
                 try { if (volumeDial) parts.push(Math.round(Number(volumeDial.value || 0)) + 'u'); } catch { }
+                try { if (articulateDial) parts.push(Math.round(Number(articulateDial.value || 0)) + 'q'); } catch { }
                 return parts.join(' ');
             }
             function refreshPresetList(selectedId) {
@@ -1531,6 +1552,7 @@
                                 case 'p': if (pitchDial) { pitchDial.value = value; pitchDial.trigger = false; } break;
                                 case 'e': if (expressionDial) { expressionDial.value = value; expressionDial.trigger = false; } break;
                                 case 'u': if (volumeDial) { volumeDial.value = value; volumeDial.trigger = false; } break;
+                                case 'q': if (articulateDial) { articulateDial.value = value; articulateDial.trigger = false; } break;
                             }
                         } catch (e) { }
                     });
@@ -1576,6 +1598,7 @@
                     try { if (pitchDial) pitchDial.trigger = true; } catch { }
                     try { if (expressionDial) expressionDial.trigger = true; } catch { }
                     try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                    try { if (articulateDial) articulateDial.trigger = true; } catch { }
                     try { if (window.voiceRadio) window.voiceRadio.trigger = true; } catch { }
                     window.randomizing = false;
                 }, 100);
@@ -1665,7 +1688,7 @@
                 const data = JSON.stringify(presets, null, 2);
                 const blob = new Blob([data], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = 'vax-presets.json'; a.click();
+                const a = document.createElement('a'); a.href = url; a.download = 'nexus-presets.json'; a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 0);
                 try { notify(`Exported ${presets.length} preset${presets.length === 1 ? '' : 's'}.`, 'success'); } catch { }
             });
@@ -1748,6 +1771,12 @@
                         volumeDial.trigger = false;
                     }
                 } catch { }
+                try {
+                    if (articulateDial) {
+                        articulateDial.value = 5;
+                        articulateDial.trigger = false;
+                    }
+                } catch { }
 
                 // Re-enable change events
                 setTimeout(() => {
@@ -1757,6 +1786,7 @@
                     try { if (pitchDial) pitchDial.trigger = true; } catch { }
                     try { if (expressionDial) expressionDial.trigger = true; } catch { }
                     try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                    try { if (articulateDial) articulateDial.trigger = true; } catch { }
                 }, 100);
 
                 // Set voice radio to Perfect Paul (index 0)
@@ -1803,6 +1833,7 @@
                 const randomPitch = Math.floor(Math.random() * 100); // 0-99
                 const randomExpression = Math.floor(Math.random() * 10); // 0-9
                 const randomVolume = Math.floor(Math.random() * 10); // 0-9
+                const randomArticulate = Math.floor(Math.random() * 10); // 0-9
 
                 // Send voice command FIRST (speech synth needs voice before other params)
                 if (typeof window.sendSerialLine === 'function') {
@@ -1817,6 +1848,7 @@
                     await window.sendSerialLine(`/p${randomPitch}`);
                     await window.sendSerialLine(`/e${randomExpression}`);
                     await window.sendSerialLine(`/u${randomVolume}`);
+                    await window.sendSerialLine(`/q${randomArticulate}`);
                 }
 
                 // Update UI dials silently (without triggering change events)
@@ -1854,6 +1886,12 @@
                     if (volumeDial) {
                         volumeDial.value = randomVolume;
                         volumeDial.trigger = false;
+                    }
+                } catch { }
+                try {
+                    if (articulateDial) {
+                        articulateDial.value = randomArticulate;
+                        articulateDial.trigger = false;
                     }
                 } catch { }
 
@@ -1898,6 +1936,7 @@
                     try { if (pitchDial) pitchDial.trigger = true; } catch { }
                     try { if (expressionDial) expressionDial.trigger = true; } catch { }
                     try { if (volumeDial) volumeDial.trigger = true; } catch { }
+                    try { if (articulateDial) articulateDial.trigger = true; } catch { }
                     try { if (window.voiceRadio) window.voiceRadio.trigger = true; } catch { }
                     try {
                         const voiceRadioEl = document.querySelector('#voiceRadio');
