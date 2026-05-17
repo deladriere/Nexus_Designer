@@ -421,6 +421,53 @@
             justify-content: flex-end;
         }
 
+        .phonetic-reference {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .phonetic-reference table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+            font-size: 12px;
+        }
+
+        .phonetic-reference th,
+        .phonetic-reference td {
+            padding: 7px 9px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .phonetic-reference th {
+            color: var(--muted);
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .phonetic-reference tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .phonetic-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .phonetic-source {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .phonetic-source a {
+            color: var(--text);
+        }
+
         .voice-inline {
             display: flex;
             align-items: center;
@@ -999,6 +1046,69 @@
                             </div>
                         </div>
 
+                        <div class="span-12">
+                            <div class="field">
+                                <div class="collapsible-header" id="phoneticHeader">
+                                    <div class="collapsible-title-container">
+                                        <h2 class="card-title">Phonetic mode reference</h2>
+                                        <button class="collapsible-toggle collapsed" id="phoneticToggle" type="button"
+                                            aria-label="Toggle phonetic mode reference">▼</button>
+                                    </div>
+                                </div>
+                                <div class="collapsible-content collapsed" id="phoneticContent">
+                                    <div class="phonetic-grid">
+                                        <div class="phonetic-reference">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Phoneme</th>
+                                                        <th>Example</th>
+                                                        <th>Phoneme</th>
+                                                        <th>Example</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr><td>A</td><td>das (Spanish)</td><td>N</td><td>new</td></tr>
+                                                    <tr><td>AA</td><td>cot</td><td>NG</td><td>rung</td></tr>
+                                                    <tr><td>AE</td><td>cat</td><td>NY</td><td>Niño (Spanish)</td></tr>
+                                                    <tr><td>AH</td><td>cut</td><td>O</td><td>no (Spanish)</td></tr>
+                                                    <tr><td>AW</td><td>cow</td><td>OW</td><td>boat</td></tr>
+                                                    <tr><td>AX</td><td>bottom</td><td>OY</td><td>boy</td></tr>
+                                                    <tr><td>AY</td><td>bite</td><td>P</td><td>pop</td></tr>
+                                                    <tr><td>B</td><td>bib</td><td>PX</td><td>spot</td></tr>
+                                                    <tr><td>CH</td><td>church</td><td>R</td><td>ring</td></tr>
+                                                    <tr><td>D</td><td>did</td><td>RR</td><td>tres (Spanish)</td></tr>
+                                                    <tr><td>DH</td><td>either</td><td>S</td><td>sell</td></tr>
+                                                    <tr><td>DX</td><td>city</td><td>SH</td><td>shell</td></tr>
+                                                    <tr><td>E</td><td>ser (Spanish)</td><td>T</td><td>tin</td></tr>
+                                                    <tr><td>EH</td><td>bet</td><td>TH</td><td>thin</td></tr>
+                                                    <tr><td>EI</td><td>mesa (Spanish)</td><td>TX</td><td>stick</td></tr>
+                                                    <tr><td>ER</td><td>bird</td><td>U</td><td>uno (Spanish)</td></tr>
+                                                    <tr><td>EW</td><td>acteur (French)</td><td>UH</td><td>book</td></tr>
+                                                    <tr><td>EY</td><td>bake</td><td>UW</td><td>boot</td></tr>
+                                                    <tr><td>F</td><td>fee</td><td>V</td><td>valve</td></tr>
+                                                    <tr><td>G</td><td>gag</td><td>W</td><td>we</td></tr>
+                                                    <tr><td>H</td><td>he</td><td>WH</td><td>when</td></tr>
+                                                    <tr><td>I</td><td>libro (Spanish)</td><td>Y</td><td>mayo (Spanish)</td></tr>
+                                                    <tr><td>IH</td><td>bit</td><td>YY</td><td>you</td></tr>
+                                                    <tr><td>IX</td><td>rabbit</td><td>Z</td><td>zoo</td></tr>
+                                                    <tr><td>IY</td><td>beet</td><td>ZH</td><td>vision</td></tr>
+                                                    <tr><td>J</td><td>age</td><td>space</td><td>variable pause</td></tr>
+                                                    <tr><td>K</td><td>cute</td><td>' (apostrophe)</td><td>short pause</td></tr>
+                                                    <tr><td>KX</td><td>ski</td><td>, (comma)</td><td>medium pause</td></tr>
+                                                    <tr><td>L</td><td>long</td><td>. (period)</td><td>long pause</td></tr>
+                                                    <tr><td>M</td><td>me</td><td></td><td></td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <p class="phonetic-source">Source: <a
+                                                href="https://www.polaxis.be/download/phonetics/" target="_blank"
+                                                rel="noopener noreferrer">Polaxis Phonetics download</a>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="span-12 tight-after-more">
                             <div class="field">
                                 <h2 class="card-title">Presets</h2>
@@ -1215,7 +1325,7 @@
                     } else {
                         content.classList.add('collapsed');
                         content.classList.remove('expanded');
-                        toggle.textContent = '▶';
+                        toggle.textContent = '▼';
                         toggle.classList.add('collapsed');
                     }
                 }
@@ -1460,7 +1570,7 @@
                 } catch { }
             }
             // ===== Presets storage helpers =====
-            const PRESET_KEY = 'vax.presets.v1';
+            const PRESET_KEY = 'nexus.presets.v1';
             function loadPresets() {
                 try { const raw = localStorage.getItem(PRESET_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
             }
@@ -1981,7 +2091,7 @@
                     } else {
                         content.classList.remove('expanded');
                         content.classList.add('collapsed');
-                        toggle.textContent = '▶';
+                        toggle.textContent = '▼';
                         toggle.classList.add('collapsed');
                     }
                 }
@@ -2001,6 +2111,38 @@
             // Initialize collapsible functionality
             initCollapsibleMidiPads();
 
+            function initCollapsiblePhoneticReference() {
+                const header = document.getElementById('phoneticHeader');
+                const toggle = document.getElementById('phoneticToggle');
+                const content = document.getElementById('phoneticContent');
+
+                if (!header || !toggle || !content) return;
+
+                function toggleCollapse() {
+                    const isCollapsed = content.classList.contains('collapsed');
+
+                    if (isCollapsed) {
+                        content.classList.remove('collapsed');
+                        content.classList.add('expanded');
+                        toggle.textContent = '▼';
+                        toggle.classList.remove('collapsed');
+                    } else {
+                        content.classList.remove('expanded');
+                        content.classList.add('collapsed');
+                        toggle.textContent = '▼';
+                        toggle.classList.add('collapsed');
+                    }
+                }
+
+                header.addEventListener('click', toggleCollapse);
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCollapse();
+                });
+            }
+
+            initCollapsiblePhoneticReference();
+
             // Tooltip toggle functionality
             function initTooltipToggle() {
                 const toggle = document.getElementById('tooltipToggle');
@@ -2010,14 +2152,14 @@
                 if (!toggle || !icon) return;
 
                 // Load saved state from localStorage
-                const tooltipsEnabled = localStorage.getItem('vax.tooltips.enabled') !== 'false';
+                const tooltipsEnabled = localStorage.getItem('nexus.tooltips.enabled') !== 'false';
                 updateTooltipState(tooltipsEnabled);
 
                 toggle.addEventListener('click', () => {
                     const currentlyEnabled = !body.classList.contains('tooltips-disabled');
                     const newState = !currentlyEnabled;
                     updateTooltipState(newState);
-                    localStorage.setItem('vax.tooltips.enabled', newState.toString());
+                    localStorage.setItem('nexus.tooltips.enabled', newState.toString());
                 });
 
                 function updateTooltipState(enabled) {
