@@ -2,6 +2,8 @@
 
 Nexus Vox Designer is a single-page browser tool for controlling a Kraftor/Polaxis voice device over Web Serial, with optional Web MIDI output pads. The app lives entirely in `index.html` and uses NexusUI widgets for the dials, buttons, radio selector, and toggle.
 
+Live page: https://deladriere.github.io/Nexus_Designer/
+
 ![Nexus Vox Designer](nexus_vox_designer.png)
 
 ## Files
