@@ -124,6 +124,8 @@ A preset stores the current voice and dial values as a compact command string, f
 0v 6s 0r 50t 50p 5e 5u 5q
 ```
 
+Presets are for voice/settings configurations only. They do not store the words entered in the MIDI pad text fields.
+
 When a preset is selected, the app updates the UI and sends the stored commands to the serial device. Voice is sent first, then the dial commands.
 
 Preset buttons:
@@ -143,7 +145,7 @@ The MIDI section uses the browser Web MIDI API.
 
 Pads send MIDI notes `36` through `47` on channel 1. Each pad sends Note On, then Note Off after about 120 ms.
 
-The text fields beside the pads can be sent to the serial device with `Update`. The app concatenates non-empty fields with `@` separators and sends one serial payload:
+The text fields beside the pads are separate from presets. They can be sent to the serial device with `Update`. The app concatenates non-empty fields with `@` separators and sends one serial payload:
 
 ```text
 @first text@second text@third text
