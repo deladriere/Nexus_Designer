@@ -903,7 +903,7 @@
                 <div class="title">Nexus
                     vox designer</div>
             </div>
-            <div class="subtitle">Polaxis - Nexus vox designer version 1.0</div>
+            <div class="subtitle">Polaxis - Nexus vox designer version 1.1</div>
         </div>
 
         <!-- Top: Serial Communication -->
@@ -1246,7 +1246,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="muted">Version 1.0</div>
+                        <div class="muted">Version 1.1</div>
                         <div class="muted"><a href="https://github.com/deladriere/Nexus_Designer" target="_blank"
                                 rel="noopener noreferrer">Source code</a></div>
                     </div>
@@ -1578,6 +1578,30 @@
                 try { localStorage.setItem(PRESET_KEY, JSON.stringify(list)); } catch { }
             }
             function makePresetId() { return 'p_' + Math.random().toString(36).slice(2, 10); }
+            function getSentenceInputs() {
+                return Array.from(document.querySelectorAll('#matrixGrid input[type="text"]'));
+            }
+            function currentSentences() {
+                return getSentenceInputs().slice(0, 12).map(el => {
+                    return (el && typeof el.value === 'string') ? el.value.trim() : '';
+                });
+            }
+            function sentencePayload(sentences) {
+                const parts = Array.isArray(sentences) ? sentences.map(v => String(v || '').trim()).filter(v => v.length > 0) : [];
+                return parts.length ? ('@' + parts.join('@')) : '';
+            }
+            function applyPresetSentences(sentences) {
+                if (!Array.isArray(sentences)) return;
+                const inputs = getSentenceInputs();
+                inputs.slice(0, 12).forEach((el, idx) => {
+                    if (el) el.value = String(sentences[idx] || '');
+                });
+            }
+            async function sendPresetSentences(sentences) {
+                if (!window.sendSerialLine || !Array.isArray(sentences)) return;
+                const payload = sentencePayload(sentences);
+                if (payload.length > 0) await window.sendSerialLine(payload);
+            }
             function currentCmdString() {
                 // Generate command string from current voice and dial values
                 const parts = [];
@@ -1614,6 +1638,8 @@
 
                 // Set flag to prevent change events from sending commands
                 window.randomizing = true;
+
+                applyPresetSentences(p.sentences);
 
                 // Parse command and update UI
                 if (p.cmd) {
@@ -1700,6 +1726,8 @@
                     }
                 }
 
+                await sendPresetSentences(p.sentences);
+
                 // Re-enable change events
                 setTimeout(() => {
                     try { if (speedDial) speedDial.trigger = true; } catch { }
@@ -1720,6 +1748,7 @@
             document.getElementById('presetSaveBtn')?.addEventListener('click', () => {
                 const nameRaw = (document.getElementById('presetName')?.value || '').trim();
                 const cmd = currentCmdString();
+                const sentences = currentSentences();
                 if (!cmd) return;
                 const list = loadPresets();
                 const sel = document.getElementById('presetList');
@@ -1733,13 +1762,13 @@
                     const idx = list.findIndex(p => norm(p.name) === norm(nameRaw));
                     if (idx >= 0) {
                         const keepId = list[idx].id;
-                        list[idx] = { ...list[idx], name: list[idx].name, cmd, updatedAt: Date.now() };
+                        list[idx] = { ...list[idx], name: list[idx].name, cmd, sentences, updatedAt: Date.now() };
                         savePresets(list); refreshPresetList(keepId);
                         notify(`Updated preset "${list[idx].name}"`, 'success');
                         return;
                     }
                     const id = makePresetId();
-                    list.push({ id, name: nameRaw, cmd, createdAt: Date.now() });
+                    list.push({ id, name: nameRaw, cmd, sentences, createdAt: Date.now() });
                     savePresets(list); refreshPresetList(id);
                     notify(`Saved "${nameRaw}"`, 'success');
                     return;
@@ -1750,7 +1779,7 @@
                 if (selectedId) {
                     const idx = list.findIndex(p => p.id === selectedId);
                     if (idx >= 0) {
-                        list[idx] = { ...list[idx], cmd, updatedAt: Date.now() };
+                        list[idx] = { ...list[idx], cmd, sentences, updatedAt: Date.now() };
                         savePresets(list); refreshPresetList(selectedId);
                         notify(`Updated preset "${list[idx].name || 'Preset'}"`, 'success');
                         return;
@@ -1763,12 +1792,12 @@
                 const idx = list.findIndex(p => norm(p.name) === norm(prompted));
                 if (idx >= 0) {
                     const keepId = list[idx].id;
-                    list[idx] = { ...list[idx], name: list[idx].name, cmd, updatedAt: Date.now() };
+                    list[idx] = { ...list[idx], name: list[idx].name, cmd, sentences, updatedAt: Date.now() };
                     savePresets(list); refreshPresetList(keepId);
                     notify(`Updated preset "${list[idx].name}"`, 'success');
                 } else {
                     const id = makePresetId();
-                    list.push({ id, name: prompted, cmd, createdAt: Date.now() });
+                    list.push({ id, name: prompted, cmd, sentences, createdAt: Date.now() });
                     savePresets(list); refreshPresetList(id);
                     notify(`Saved "${prompted}"`, 'success');
                 }
@@ -1819,9 +1848,10 @@
                     let added = 0;
                     importedArray.forEach(p => {
                         const name = (p?.name || '').trim(); const cmd = (p?.cmd || '').trim();
+                        const sentences = Array.isArray(p?.sentences) ? p.sentences.slice(0, 12).map(v => String(v || '')) : [];
                         if (!cmd) return;
-                        const dup = merged.find(x => (x.name || '') === name && (x.cmd || '') === cmd);
-                        if (!dup) { merged.push({ id: makePresetId(), name: name || 'Preset', cmd, createdAt: Date.now() }); added++; }
+                        const dup = merged.find(x => (x.name || '') === name && (x.cmd || '') === cmd && JSON.stringify(x.sentences || []) === JSON.stringify(sentences));
+                        if (!dup) { merged.push({ id: makePresetId(), name: name || 'Preset', cmd, sentences, createdAt: Date.now() }); added++; }
                     });
                     savePresets(merged);
                     // If previously empty and we imported any, select and apply the first imported preset

@@ -1,5 +1,7 @@
 # Nexus Vox Designer
 
+Version 1.1
+
 Nexus Vox Designer is a single-page browser tool for controlling a Kraftor/Polaxis voice device over Web Serial, with optional Web MIDI output pads. The app lives entirely in `index.html` and uses NexusUI widgets for the dials, buttons, radio selector, and toggle.
 
 Live page: https://deladriere.github.io/Nexus_Designer/
@@ -124,9 +126,36 @@ A preset stores the current voice and dial values as a compact command string, f
 0v 6s 0r 50t 50p 5e 5u 5q
 ```
 
-Presets are for voice/settings configurations only. They do not store the words entered in the MIDI pad text fields.
+Presets also store the 12 MIDI pad text fields in a `sentences` array. Empty fields are kept as empty strings so the sentence positions still match MIDI notes 36-47.
 
-When a preset is selected, the app updates the UI and sends the stored commands to the serial device. Voice is sent first, then the dial commands.
+When a preset is selected, the app updates the UI and sends the stored commands to the serial device. Voice is sent first, then the dial commands, then the stored sentence payload using `@` separators.
+
+Sentence length note: each MIDI pad sentence can be up to about 255 characters, but the device receives all 12 sentences as one update. Keep the combined text for the 12 fields under about 1000 characters total, including the `@` separators. Short phrases work best.
+
+Example preset export entry:
+
+```json
+{
+  "id": "p_example",
+  "name": "Default",
+  "cmd": "0v 6s 0r 50t 50p 5e 5u 5q",
+  "sentences": [
+    "first text",
+    "second text",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "createdAt": 1780423200000
+}
+```
 
 Preset buttons:
 
@@ -145,11 +174,13 @@ The MIDI section uses the browser Web MIDI API.
 
 Pads send MIDI notes `36` through `47` on channel 1. Each pad sends Note On, then Note Off after about 120 ms.
 
-The text fields beside the pads are separate from presets. They can be sent to the serial device with `Update`. The app concatenates non-empty fields with `@` separators and sends one serial payload:
+The text fields beside the pads are saved with presets. They can also be sent manually to the serial device with `Update`. The app concatenates non-empty fields with `@` separators and sends one serial payload:
 
 ```text
 @first text@second text@third text
 ```
+
+The device stores up to 12 sentences, mapped to MIDI notes 36-47. Each individual sentence can be roughly 255 characters, but the total update should stay under about 1000 characters.
 
 ## Phonetic Mode Reference
 
